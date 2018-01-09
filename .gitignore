@@ -1,0 +1,4 @@
+/Output/
+*.fits
+/RefFiles/Atmosphere/
+backupArray.mat
