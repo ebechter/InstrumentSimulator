@@ -1,4 +1,4 @@
-# Project Title
+# Simulating the iLocater Spectrograph  
 
 One Paragraph of project description goes here
 
