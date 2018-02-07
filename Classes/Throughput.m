@@ -314,7 +314,7 @@ classdef Throughput
             global curve_dir
             %% ----------Load Curves----------%
             %fathom gold file format: 
-            % WL(nm),10deg r-pol,10deg s-pol,10deg p-pol,25deg r-pol,25deg s-pol,25deg p-pol
+            %WL(nm),10deg r-pol,10deg s-pol,10deg p-pol,25deg r-pol,25deg s-pol,25deg p-pol
             filename = 'FathomGold.mat';
             file = strcat(curve_dir,filename);
             load(file)

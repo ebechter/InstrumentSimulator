@@ -1,4 +1,4 @@
-classdef Instrument < Throughput
+classdef Instrument
     
     properties
         Progression
@@ -71,6 +71,18 @@ classdef Instrument < Throughput
                 obj.Progression{ii}(:,2) = Tput;
             end
         end
+        
+        function[obj] = loadCurves(obj,coatingName,polarization)
+            
+            
+            filename = coatingName; 
+            file = strcat(curve_dir,filename);
+            load(file)
+            
+            
+            
+            
+        
         function [obj] = Trim_Throughput(obj)
             for ii = length(obj.Progression)
                 [xtrim,ytrim]=select_bandpass_noplot(obj.Progression{ii}(:,1),obj.Progression{ii}(:,2),obj.Bandpass(1,:));
