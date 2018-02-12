@@ -23,7 +23,7 @@ classdef Star < Spectra
                 obj.vmag = mag; % V magntiude
                 obj.epsilon = epsilon; % not sure about this parameter
                 obj.vsini= vsini; %rotational velocity in km/s (Rot broad uses km/s)
-                obj.rv = rv; %Set RV shift
+                obj.rv = rv; %Set rv shift
                 obj.spectrumUnits = units;
                 
             end

@@ -20,7 +20,7 @@ classdef Imager < Instrument
                 opticalModel{6} = struct('name','ADC2','type','triplet prism','coatingName','NIR','number',1,'angle',[],'efficiency',[]);
                 opticalModel{7} = struct('name','FSM','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
                 opticalModel{8} = struct('name','Shortpass','type','triplet prism','coatingName','ECISpassT','number',1,'angle','45','efficiency',[]);
-                %                 opticalModel{9} = struct('name','AndorFilter','type','bandpass filter','coatingName','Imagefilter','number',1,'angle',[],'efficiency',[]);
+                %opticalModel{9} = struct('name','AndorFilter','type','bandpass filter','coatingName','Imagefilter','number',1,'angle',[],'efficiency',[]);
                 opticalModel{9}= struct('name','L5','type','triplet lens','coatingName','NIR','number',1,'angle',[],'efficiency',[]);
                 opticalModel{10}= struct('name','ANDOR','type','detector','coatingName','AndorZyla42','number',1,'angle',[],'efficiency',[]);
                 

@@ -7,11 +7,11 @@ classdef Etalon < Spectra
         refpeak
         FSR_measured
         FSR_estimated
-        RV
+        rv
     end
     
     methods
-        function [obj] = Etalon(EtalonType,FSR,scale,TestRV)
+        function [obj] = Etalon(EtalonType,FSR,scale,rv)
             %% Pre Initialization %%
             % Any code not using output argument (obj)
             if nargin == 0
@@ -22,8 +22,8 @@ classdef Etalon < Spectra
             end
             
             obj = LoadEtalon(obj,EtalonType,FSR,scale); %Andrew added this 5/23/17
-            obj.RV = TestRV;
-            obj.Wavelength = obj.DopplerShift;
+            obj.rv = rv;
+            obj.wavelength = obj.dopplerShift;
         end
         
         
