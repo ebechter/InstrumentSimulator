@@ -52,6 +52,19 @@
 % FiberDRefl = Out;
 % save('FiberDRefl.mat','FiberDRefl')
 
+clear
+close 
+
+%fathom gold file format:
+% WL(nm),10deg r-pol,10deg s-pol,10deg p-pol,25deg r-pol,25deg s-pol,25deg p-pol
+filename = 'S:\Simulator\RefFiles\Curves\FathomGold.mat';
+file = strcat(filename);
+load(file)
+
+FathomGold10 = FathomGold(:,1:4);
+FathomGold25 = FathomGold(:,[1,5:7]);
+
+return
 clear 
 close 
 

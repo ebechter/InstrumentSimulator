@@ -1,30 +1,32 @@
 classdef Spectra
     properties
-        Spectrum
-        Counts
-        Wavelength
+        spectrum
+        counts
+        wavelength
+        dsWavelength
+        spectrumUnits
     end
     methods
-        function [obj] = Energy2Counts(obj)
-            l = obj.Wavelength*1E-6; %m
+        function [obj] = energy2Counts(obj)
+            l = obj.wavelength*1E-6; %m
             c = 2.9979245800 * 10^8; %m/s
             h = 6.62607004E-34; %J*s
             engy = h*c./l;%energy of a photon in Joules
             
-            obj.Counts(:,1) = (obj.Spectrum(:,1))./(engy);
+            obj.counts(:,1) = (obj.spectrum(:,1))./(engy);
         end
         
-        function [DsWavelength] = DopplerShift(obj)
+    end
+    methods(Static)
+        
+        function [dsWavelength] = dopplerShift(wavelength,rv)
             % DESCRIPTION: Doppler shift a spectrum
             c = 2.9979245800 * 10^8;  % Speed of light [m/s] according to NIST - http://physics.nist.gov/cgi-bin/cuu/Value?c
-            beta = obj.RV / c;
+            beta = rv / c;
             delta = sqrt((1 + beta) / (1 - beta));
-            DsWavelength = [obj.Wavelength].*delta;
+            dsWavelength = [wavelength].*delta;
         end
-    end
-        methods(Static)
-            
-        function [energy] = Counts2Energy(wavelength,inputspectrum)
+        function [energy] = counts2Energy(wavelength,inputspectrum)
             l = wavelength*1E-6; %m
             c = 2.9979245800 * 10^8; %m/s
             h = 6.62607004E-34; %J*s
