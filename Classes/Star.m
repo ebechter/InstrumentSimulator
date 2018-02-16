@@ -4,7 +4,6 @@ classdef Star < Spectra
         vmag
         rmag
         imag
-        rv
         epsilon
         vsini
     end
@@ -108,74 +107,8 @@ classdef Star < Spectra
             obj.spectrum = interpflux';
             obj.wavelength = lambda';
         end
-        
-        %         function [obj] = LoadTelluric(obj)
-        %
-        %             %load and ajust units on telluric filed
-        %             global telluricfile
-        %
-        %             load(telluricfile)
-        %             telluric(:,1)=telluric(:,1)/1000; % native telluric file is in nm
-        %
-        %             % ds wavelength and wavelength range sampled at native spectral
-        %             % file (fallard). Tellurics are sampled up to match
-        %
-        %             lb = max(telluric(1,1),obj.DsWavelength(1,1)); %find the lower bound
-        %             ub = min(telluric(end,1),obj.DsWavelength(end,1)); %find the upper bound
-        %             ind2 = find(obj.DsWavelength<=ub,1,'last'); %find index in Ds wavelength
-        %             ind = find(obj.DsWavelength>=lb,1,'first'); %find index in Ds wavelength
-        %
-        %             %assign properties to object
-        %             obj.DsWavelength = obj.DsWavelength(ind:ind2); %trim DsWavelength
-        %             obj.Wavelength = obj.Wavelength(ind:ind2); %trim Wavelength
-        %             obj.Spectrum= obj.Spectrum(ind:ind2); %trim Spectrum
-        %             obj.Counts = obj.Counts(ind:ind2); %trim Spectrum
-        %             obj.Tellurics = interp1(telluric(:,1),telluric(:,2),obj.DsWavelength); %upsample tellurics to match Dswavelength sampling
-        %         end
-        function [obj] = vacShift(obj)
-            
-            % # The IAU standard for conversion from air to vacuum wavelengths is given
-            % # in Morton (1991, ApJS, 77, 119). For vacuum wavelengths (VAC) in
-            % # Angstroms, convert to air wavelength (AIR) via:
-            
-            %The *10 assignment and then /10 is done because this formula
-            %works in angs
-            VAC = 10000*obj.Wavelength;
-            dsVAC = 10000*obj.DsWavelength;
-            
-            obj.wavelength = (VAC./ (1.0 + 2.735182E-4 + 131.4182./VAC.^2 + 2.76249E8./VAC.^4))/10000;
-            obj.dsWavelength = (dsVAC./ (1.0 + 2.735182E-4 + 131.4182./dsVAC.^2 + 2.76249E8./dsVAC.^4))/10000;
-            
-        end
-        %         function [obj] = SkyBack(obj,Fiber)
-        %             % Sky background in photons/sec/arcsec^2/nm/m^2
-        %             % from:http://www.gemini.edu/sciops/telescopes-and-sites/observing-condition-constraints/ir-background-spectra
-        %
-        %             global skybackfile
-        %
-        %             load(skybackfile)
-        %
-        %             Fiber_projection = pi*(0.5*Fiber*1E-3)^2; %40mas circle in arcseconds^2
-        %
-        %             Sky_intensity = skybackraw(:,2) * 36; % 36 is scaling factor from gemini to LBT H band.
-        %
-        %             % photons/sec/nm/m^2 at LBT magnitude
-        %             Sky_counts = Sky_intensity*Fiber_projection; %Fiber projection on sky will remove /arcsecond^2 in Background
-        %
-        %             Sky_counts = Sky_counts * 1000;%nm/mircon
-        %             obj.SkyBackground(:,2) = Sky_counts;%measured in photons/sec/micron/m^2
-        %             obj.SkyBackground(:,1) = skybackraw(:,1)./1000;
-        %
-        %
-        %
-        % %             [Background_Energy_arc] = Spectra.Counts2Energy(Wavelength./1000,Background_Intensity);% convert counts to physical units (wavelength in nm)
-        %
-        % %             [Energy_resamp_nm] = Resamp_Extrap(Wavelength,Energy,1000*obj.Wavelength); %Interpolate and extrapolate Energy and Wavelength onto DsWavelength;
-        %             % Intensity is now measured in joules/sec/nm/m^2
-        %
-        %
-        %         end
-    end 
+    end
+     
     methods (Static)
     
             function [result] = rotBroad(vsini,epsilon,flux,wvl)

@@ -7,7 +7,6 @@ classdef Etalon < Spectra
         length     % cavity length in meters - calculated from FSR
         type       % default, ref, or fullref 
         %
-        wavecenters % vector of peak wavelengths in angstroms. Calculated by maximizing intensity function  
         refpeak
         %         FSR_measured
         %         FSR_estimated
@@ -85,10 +84,8 @@ classdef Etalon < Spectra
             % f_coeff_check = (2*finesse/pi).^2;
             I = 1 ./ (1 + f_coeff * sin(delta/2).^2);
             
-            iBound = round(2*n*obj.length./[lambda(1) lambda(end)]);
-            i = iBound(1):-1:iBound(end);
-            obj.wavecenters = 1e10*(2*n*obj.length)./i;
-            
+            % dlambda = (lambda.^2)./(2*l*n+lambda);
+            % lambda_spacing = 1E9*mean(dlambda);
             
             
             if strcmp(type, 'default')==1
@@ -165,7 +162,7 @@ classdef Etalon < Spectra
             %             plot(obj.Wavelength/10,obj.dlambda)
             
             figure()
-            plot(obj.wavelength/10, obj.counts , 'linewidth' , 0.5 , 'color' , [0.8 , 0.1 ,0.8]);
+            plot(obj.Wavelength/10, obj.Counts , 'linewidth' , 0.5 , 'color' , [0.8 , 0.1 ,0.8]);
             ylim([0 1.2])
             
             % %             window = 5*0.1*1E9;
@@ -177,9 +174,6 @@ classdef Etalon < Spectra
             disp(['FSR = ',num2str(obj.FSR),'GhZ'])
             disp(['F = ',num2str(obj.Finesse)])
         end
-        
-        
-        % Potato calculation of FSR.
         function [obj] = FSRCalc(obj)
             
             I1 = obj.Counts;
