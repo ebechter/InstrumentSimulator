@@ -1,9 +1,8 @@
 % clear up the workspace
 clear; close all; clc
-addpath(genpath(pwd))
 
 
-% Create extended color list
+% C extended color list
 d = get(groot,'DefaultAxesColorOrder');
 for ii = 1:7
     colors{ii}=d(ii,:);
@@ -15,7 +14,8 @@ colors{10}= colors{3};
 colors{11} =[0 0.3 0];
 clear d
 
-%-----------------------Parallel Settings----------------------%
+
+%-----------------------Parallel Settings-----------------------------%
 numworkers=4;
 parflag = true;
 poolobj = gcp('nocreate');
@@ -30,7 +30,6 @@ if parflag ==true  %
 else
     delete(poolobj); % should shut down the current pool or does nothing if there is no pool
 end
-
 
 %-----------------------User Inputs-----------------------------%
 wavesolution = 0; % 1 = recalculate, 0 = load previous
@@ -60,16 +59,13 @@ rndpos = [fx,fy,fz];% global position offset in microns (x,y,z)
 
 dof = 0; %Polychromatic depth of focus in microns
 
-%-----Stellar Inputs-----%
-units = 'counts'; % what physical units do you want? 'energy or counts'
+%-----Stellar Parameters-----%
 type = 'M0V'; %Spectral type
 v_mag = 7;%9+1.848; %Magnitude 
 %V-I --> [F5 = 0.506, G0 = 0.664, G5 = 0.738,K0 = 0.853,K5 = 1.246, M0 = 1.848, M4=2.831, M7=4.52];
+% vsini = 2.5;
 vsini = 2.5;
 epsilon = 1; 
-rv = 0; 
-scale =3; %etalon spectrum upscaling factor
-
 
 %-----Observation Conditions-----%
 z_deg = 45; % %Zenith angle use 10-45-60 as defaults
@@ -78,12 +74,11 @@ Tellurics =true; % true or false
 SkyBack = false;
 
 %-----Misc-----%
+spectrum_units = 'counts'; % what physical units do you want? 'energy or counts'
+TestRV = 0; % RV shift for calibration and stars
+scale =3; %etalon spectrum upscaling factor
 FSR = 10; %Etalon frequency GHz 
 EtalonType = 'science'; %"science" or "ref" or "fullref" or "gauss" or delta
-
-starinputs = [] 
-etaloninputs = [a b c d]
-classinputs
 
 % ---------------------------------------------------------------%
 tic

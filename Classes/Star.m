@@ -30,8 +30,8 @@ classdef Star < Spectra
             
             global allardpath
             global starfile
-            starfile =  [pathprefix '/../RefFiles/Star/fullpecautmamajek.xlsx'];
-            allardpath = [pathprefix '/../../Spectral_Catalogs/FAllard/CIFIST6b_trimmed/'];
+            starfile =  [pathprefix '/RefFiles/Star/fullpecautmamajek.xlsx'];
+            allardpath = [pathprefix '/../Spectral_Catalogs/FAllard/CIFIST6b_trimmed/'];
             
             %Load the calibrated spectrum. %Scales to magnitude and calculates color to temp
             obj = loadSpectrum(obj); %target.Spectrum is in w/m^2/micron, target.Wavelength in microns

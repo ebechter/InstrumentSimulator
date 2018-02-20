@@ -19,7 +19,7 @@ classdef Spectrograph < Instrument
                 opticalModel{6} = struct('name','R6Grating','type','Grating','coatingName','R6Grating','number',1,'angle','88','efficiency',[]);
                 bandPass = [970,1270];
                 polarization = [0.5,0.1,0]; % degree of polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
-                curveDirectory = 'S:\Simulator\RefFiles\Curves\Spectrograph\';                
+                curveDirectory = [pwd '/RefFiles/Curves/Spectrograph/'];                
             else
                 
             end

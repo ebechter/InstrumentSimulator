@@ -20,7 +20,7 @@ classdef Atmosphere
                 obj.scaleFactor = scaleFactor; 
                 
                 pathprefix = pwd;
-                telluric_path = '/../RefFiles/Atmosphere/telluric_200.mat';
+                telluric_path = '/RefFiles/Atmosphere/telluric_200.mat';
                 fullpath = [pathprefix telluric_path];
                 temp = load(fullpath,'-mat');
                 temp = struct2cell(temp);
@@ -29,7 +29,7 @@ classdef Atmosphere
                 obj.telluric(:,1)=tell(:,1)/1000; % native telluric file is in nm
                 obj.telluric(:,2)=tell(:,2); % transmission spectrum
                 
-                skyback_path = '/../RefFiles/SkyBackground/SkyBackground.mat';
+                skyback_path = '/RefFiles/SkyBackground/SkyBackground.mat';
                 fullpath = [pathprefix skyback_path];
                 temp = load(fullpath,'-mat');
                 temp = struct2cell(temp);

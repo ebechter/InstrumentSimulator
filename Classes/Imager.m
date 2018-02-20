@@ -126,7 +126,7 @@ classdef Imager < Instrument
                 plateScale = [];
                 
             end
-            curveDirectory = 'S:\Simulator\RefFiles\Curves\Instrument\';
+            curveDirectory = [pwd '/RefFiles/Curves/Instrument/'];
             obj.bandPass = bandPass;
             obj.pixelPitch = [];
             obj.detectorDimensions = [];
