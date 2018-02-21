@@ -1,6 +1,4 @@
-% clear up the workspace
-clear; close all; clc
-addpath(genpath(pwd))
+
 
 
 % Create extended color list

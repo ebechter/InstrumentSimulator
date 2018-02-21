@@ -40,6 +40,7 @@ classdef Star < Spectra
             %Convert Spectum to counts and fills target.Counts property
 %             obj = energy2Counts(obj); %target.Counts is in counts/s/m^2/micron
             obj.dsWavelength = Star.dopplerShift(obj.wavelength,obj.rv); %Shift Wavelength and assign DsWavelength
+            obj.counts = Star.energy2Counts(obj.dsWavelength,obj.spectrum);
         end
         
         %methods for preparing spectrum and collecting ancillary info

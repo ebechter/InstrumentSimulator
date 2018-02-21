@@ -8,17 +8,6 @@ classdef Spectra
         rv
         scale
     end
-    methods
-        function [obj] = energy2Counts(obj)
-            l = obj.wavelength*1E-6; %m
-            c = 2.9979245800 * 10^8; %m/s
-            h = 6.62607004E-34; %J*s
-            engy = h*c./l;%energy of a photon in Joules
-            
-            obj.counts(:,1) = (obj.spectrum(:,1))./(engy);
-        end
-        
-    end
     methods(Static)
         
         function [dsWavelength] = dopplerShift(wavelength,rv)
@@ -35,7 +24,14 @@ classdef Spectra
             engy = h*c./l;%energy of a photon in Joules
             energy = engy.*inputspectrum;
         end
-        
+        function [counts] = energy2Counts(spectrum, wavelength)
+            l = wavelength*1E-6; %m
+            c = 2.9979245800 * 10^8; %m/s
+            h = 6.62607004E-34; %J*s
+            engy = h*c./l;%energy of a photon in Joules
+            
+            counts = spectrum./engy;
+        end
         function [wavelength] = vacShift(vac_wavelength)
             
             % # The IAU standard for conversion from air to vacuum wavelengths is given

@@ -1,5 +1,7 @@
 % Simulation Main Script
-
+% clear up the workspace
+clear; close all; clc
+addpath(genpath(pwd))
 
 
 % First thing is to check user inputs from the wrapping script.
@@ -112,7 +114,7 @@
 
 curve{1}.source = 'Star';
 curve{1}.atmosphere = 1;
-curve{1}.throughput = {'lbt','lbti','acquisition_camera','fiber','spectrograph'};
+curve{1}.throughput = {'lbt','lbti','fiber','spectrograph'};
 
 curve{2}.source = 'Etalon';
 curve{2}.atmosphere = 0;
@@ -123,8 +125,8 @@ curve{3} = curve{1};
 
 
 %========== Instanciate objects ===========%
-tracenum = [1,2,3];
-tracenum = 1
+% tracenum = [1,2,3];
+tracenum = 1;
 for ii = tracenum
     
     %========== Source Options ===========%
@@ -158,44 +160,66 @@ for ii = tracenum
     end
     
     if nonzeros(strcmp('lbt', curve{ii}.throughput)) == 1 && exist('lbt','var') == 0
-        % make the spectrograph throughput
+        % make the lbt throughput
         lbt = Imager('LBT');
         components = [components, lbt];
         
     end
     
     if nonzeros(strcmp('lbti', curve{ii}.throughput)) == 1 && exist('lbti','var') == 0
-        % make the spectrograph throughput
+        % make the l throughput
         lbti = Imager('LBTI');
         components = [components, lbti];
     end
+    
+%     if nonzeros(strcmp('lbti', curve{ii}.throughput)) == 1 && exist('lbti','var') == 0
+%         % make the l throughput
+%         lbti = Imager('LBTI');
+%         components = [components, lbti];
+%     end
+    
+    if nonzeros(strcmp('fiber', curve{ii}.throughput)) == 1 && exist('fiber','var') == 0
+        % make the l throughput
+        fiber = Imager('FIBER');
+        components = [components, fiber];
+    end
 end
 
-% 
-% % Pass instrument names to simulation class
-% 
-% % one or fewer of source, final throughput, atmosphere, 
-% [combinedthroughput] = Simulation.CombineImagerThroughput()
-% 
-
- [finalThroughput] = combinedImagerThroughput (objects);
- comTput = objects{1}.finalThroughput;
+% Combine imager throughputs  
+%  [finalThroughput] = combinedImagerThroughput(objects);
+ comTput{1} = components(1).finalThroughput;
  
- for ii = 2:number of objects %loop over cellarry size (i.e. surfaces)
-     comTput = objects{1}.finalThroughput;
-     [comTput{ii}(:,1),comTput{ii}(:,2)] = Instrument.multiply_curves(comTput{ii-1}(:,1),comTput{ii-1}(:,2),comTput{ii}(:,1),comTput{ii}(:,2));    
+ for ii = 2:size(components,2) %loop over cellarry size (i.e. surfaces)
+     [comTput{ii}(:,1),comTput{ii}(:,2)] = Instrument.multiply_curves...
+         (comTput{ii-1}(:,1),comTput{ii-1}(:,2),...
+          components(ii).finalThroughput(:,1),components(ii).finalThroughput(:,2));    
  end
 
 
 
-% 
-% if exist('atmosphere','var')
+
+if exist('atmosphere','var')
 %     [addedatmosphere] = Simulation.AddAtmosphere(star,atmosphere);
-%     
-% else
-%     
-%     addedatmosphere = star;
-% end
+[skygrid] = Simulation.resampleToGrid(atmosphere.skyback(:,1),atmosphere.skyback(:,2),star.dsWavelength);
+
+atmosphere.skyback = [star.dsWavelength,skygrid];
+
+addsky = star.counts + skygrid;
+
+[tell_grid] = Simulation.resampleToGrid(atmosphere.telluric(:,1),atmosphere.telluric(:,2),star.dsWavelength);
+
+addtell = addsky.*tell_grid;
+else
+    
+    addedatmosphere = star;
+end
+
+
+[throughput_grid] = Simulation.resampleToGrid(atmosphere.telluric(:,1),atmosphere.telluric(:,2),star.dsWavelength);
+
+addtell = addsky.*tell_grid;
+
+
 % 
 % [modifiedspectrum] = Simulation.MultiplyThroughput(addedatmosphere, combinedthroughput);
 % 
