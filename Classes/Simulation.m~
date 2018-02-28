@@ -337,8 +337,7 @@ classdef Simulation
         end
         
     end
-end
-
+    
 function [areas,ret] = polyfillaa(px,py,sx,sy)
 
 
@@ -424,6 +423,8 @@ areas(zero_ind)=[];
 ret(zero_ind)=[];
 
 end
+
+
 function clippedPolygon = sutherlandHodgman(subjectPolygon,clipPolygon)
 %The inputs are a table of x-y pairs for the verticies of the subject
 %polygon and boundary polygon. (x values in column 1 and y values in column
@@ -562,3 +563,4 @@ F = F./sum(sum(F));
 end    
     
     
+end
