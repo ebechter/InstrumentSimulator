@@ -97,11 +97,7 @@ classdef Star < Spectra
             %assign properties to object
             obj.rmag = R_mag;
             obj.imag = I_mag;
-            
-            temp = diff(wavelength);
-            dlam = [temp(1) temp];
-            flux = spfluxden.*dlam;
-            obj.spectrum = flux;
+            obj.spectrum = spfluxden;
             obj.wavelength = wavelength; 
 
         end

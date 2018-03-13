@@ -3,8 +3,8 @@ for ii = tracenum
 
     if strcmp(curve{ii}.source,'star')
         
-        spectral_cell{ii} = Simulation.addStar(spectrograph.maxR,spectrograph.pixSamp,...
-                                           simulation.scale,spectrograph.bandPass,star.wavelength,star.spectrum,star.rv);
+        spectral_cell{ii} = Simulation.addStar(spectrograph.maxR,spectrograph.pixSamp, simulation.scale, ...
+                            spectrograph.bandPass,star.wavelength,star.spectrum,star.rv);
         
         if curve{ii}.atmosphere == 1
             
@@ -12,7 +12,10 @@ for ii = tracenum
                                                            atmosphere.telluric, atmosphere.skyback);
             
         end
-    
+        
+        spectral_cell{ii}(:,2) = Simulation.addCollectingArea(spectral_cell{ii}(:,2),lbt.apDiameter,lbt.blockFrac);
+        spectral_cell{ii}(:,2) = Star.fluxDenToflux(spectral_cell{ii}(:,1),spectral_cell{ii}(:,2));
+        
         if curve{ii}.AO == 1 
             
             % if we want ao, first check if its already been made

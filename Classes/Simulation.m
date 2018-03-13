@@ -19,6 +19,7 @@ classdef Simulation
     methods(Static)
         
         function [sampledstar] = addStar(R,pixSamp,scale,bandpass,wavelength,counts,rv)
+            
 
             % Define wavelength step (input in nm, output in microns) using maximum resolving power (R), 
             % pixSamp, and scale factor            
@@ -33,6 +34,13 @@ classdef Simulation
             counts = Star.energy2Counts(dsWavelength,interpflux);
             sampledstar = [dsWavelength;counts]';
             
+            
+        end
+        
+        function [counts] = addCollectingArea(countsPerArea,dTel,blockFrac)
+            
+            collecting_area = pi*(dTel/2)^2 - pi*(blockFrac*dTel/2)^2;
+            counts = countsPerArea * collecting_area;
             
         end
         

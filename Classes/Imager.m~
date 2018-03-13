@@ -11,9 +11,6 @@ classdef Imager < Instrument
     methods
         function [obj] = Imager(type,bandPass,opticalModel,pixelPitch,detectorDimensions,psf)
             %% Pre Initialization %%
-            
-            blockFrac = [];
-            apDiameter = [];
             % Any code not using output argument (obj)
             if nargin == 0 || strcmp(type,'ANDOR') == 1
                 %Need to define an optical model structure and rules.
@@ -116,12 +113,11 @@ classdef Imager < Instrument
                 pixelPitch = [];
                 detectorDimensions = [];
                 plateScale = [];
-                blockFrac = 0.108; % value listed as 0.889
-                apDiameter = 8.22; % meters (IR effective collecting area, supposedly)
+                blockFrac = 0.108; % value 
                 
                 
             elseif strcmp(type,'LBTI') == 1
-                opticalModel{1} = struct('name','Entrance Window','type','dichroic','coatingName','ECIEntWT','number',1,'angle',[],'efficiency',[]);
+                opticalModel{1} = struct('name','Entrance Window','type','dichroic','coatingName','LBTI_ZnSeT','number',1,'angle',[],'efficiency',[]);
                 opticalModel{2} = struct('name','Ellipse Mirror','type','elliptical mirror','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
                 opticalModel{3} = struct('name','Pupil mirrror','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
                 opticalModel{4} = struct('name','Roof mirrror','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
@@ -140,8 +136,6 @@ classdef Imager < Instrument
             obj.detectorDimensions = [];
             obj.opticalModel = opticalModel;
             obj.plateScale = plateScale;
-            obj.blockFrac = blockFrac;
-            obj.apDiameter = apDiameter;
             [obj] = loadOpticalModelCurves(obj,curveDirectory);
             [obj] = trimThroughput(obj);
             [obj] = intThroughput(obj);

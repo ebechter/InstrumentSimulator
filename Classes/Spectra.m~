@@ -46,12 +46,6 @@ classdef Spectra
             
         end
         
-        function [flux] = fluxDenToflux(wavelength,fluxden)
-                
-            temp = diff(wavelength);
-            dlam = [temp(1); temp];
-            flux = fluxden.*dlam;     
-        
-        end
+        function [] 
     end
 end

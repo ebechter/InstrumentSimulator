@@ -42,6 +42,7 @@ classdef Atmosphere
                 obj.skyback(:,2) = obj.skyback(:,2) * 1000;%nm/mircon
                 obj.skyback(:,1) = obj.skyback(:,1)./1000; % wavelength conversion nm to microns
                 
+                
         end
         
         function [] = plotAtm(obj)
