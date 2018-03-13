@@ -2,10 +2,12 @@ classdef Spectrograph < Instrument
     properties
         polarization
         grating
+        maxR
+        pixSamp
     end
     
     methods
-        function [obj] = Spectrograph(bandPass, polarization, opticalModel)
+        function [obj] = Spectrograph(bandPass, polarization, opticalModel,maxR,pixSamp)
             %% Pre Initialization %%
             % Any code not using output argument (obj)
             if nargin == 0
@@ -20,6 +22,8 @@ classdef Spectrograph < Instrument
                 bandPass = [970,1270];
                 polarization = [0.5,0.1,0]; % degree of polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
                 curveDirectory = [pwd '/RefFiles/Curves/Spectrograph/'];                
+                maxR = 275e3;
+                pixSamp = 3;
             else
                 
             end
@@ -27,6 +31,8 @@ classdef Spectrograph < Instrument
             obj.bandPass = bandPass;
             obj.polarization = polarization;
             obj.opticalModel = opticalModel;
+            obj.maxR = maxR;
+            obj.pixSamp = pixSamp;
             [obj] = loadOpticalModelCurves(obj,curveDirectory);
             [obj] = trimThroughput(obj);
             [obj] = R6Grating(obj,curveDirectory);

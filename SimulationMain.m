@@ -1,9 +1,9 @@
-% Simulation Main Script
+% simulation Main Script
 % clear up the workspace
 clear; close all; clc
 addpath(genpath(pwd))
-parflag = false;
-scale = 1;
+parflag = true;
+scale = 3;
 load polycoeffs2
 load chebycoeffs2
 nOrders = 2;
@@ -90,7 +90,7 @@ for ii = tracenum
     
 end
 
-
+simulation = Simulation(scale); 
 spectral_cell = cell(3,1);
 
 
@@ -102,16 +102,16 @@ runDecisionTree()
 % Now convolve each spectral order and clip on detector in parallel or serial. 
 for jj = tracenum
 
-    
-    temp_cell = spectral_cell{jj};
-    
     fprintf('\nStarting trace %i \n',jj)
     if parflag == true
+        parallel_scale = simulation.scale;
+        parallel_cell = spectral_cell{jj};
+        
         parfor ii = 1:nOrders
             
             fprintf('Computing order %i... ',ii)
             
-            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(temp_cell{ii}(:,1),temp_cell{ii}(:,2),wave_coeff(ii,:,jj),scale);
+            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(parallel_cell{1}(:,ii),parallel_cell{2}(:,ii),wave_coeff(ii,:,jj),parallel_scale);
             Detector(:,:,ii,jj) = Simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
             fprintf('%s \n',char(hex2dec('2713')))
             
@@ -123,7 +123,7 @@ for jj = tracenum
             
             fprintf('Computing order %i... ',ii)
             
-            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(spectral_cell{jj}{1}(:,ii),spectral_cell{jj}{2}(:,ii),wave_coeff(ii,:,jj),scale);
+            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(spectral_cell{jj}{1}(:,ii),spectral_cell{jj}{2}(:,ii),wave_coeff(ii,:,jj),simulation.scale);
             Detector(:,:,ii,jj) = Simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
             fprintf('%s \n',char(hex2dec('2713')))
 

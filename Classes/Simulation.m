@@ -1,14 +1,41 @@
 classdef Simulation
     properties
-        
+        scale
         
     end
     
     methods
+        function obj = Simulation(scale)
+        
+            if nargin == 0 
+                obj.scale = 1;
+            else
+                obj.scale = scale;
+            end
+        end
         
     end
     
     methods(Static)
+        
+        function [sampledstar] = addStar(R,pixSamp,scale,bandpass,wavelength,counts,rv)
+
+            % Define wavelength step (input in nm, output in microns) using maximum resolving power (R), 
+            % pixSamp, and scale factor            
+            dlam = 1000/R/pixSamp;
+            step = dlam/scale;
+            pad = 0.05 ; % 5% padding will be applied to spectrograph bandpass
+            paddedband = [bandpass(1)*(1-pad) bandpass(2)*(1+pad)]; % pad the bandpass
+            interplambda = (paddedband(1):step:paddedband(2))./1e3;
+            interpflux = interp1(wavelength, counts, interplambda,'linear');
+            
+            dsWavelength = Star.dopplerShift(interplambda,rv); %Shift Wavelength and assign DsWavelength
+            counts = Star.energy2Counts(dsWavelength,interpflux);
+            sampledstar = [dsWavelength;counts]';
+            
+            
+        end
+        
         function [y_grid] = resampleToGrid(x,y,x_grid)
             % this function cuts a new x vector and the max of the original and
             % extrapolates the short end of the new x vector to the short end of the
@@ -25,7 +52,7 @@ classdef Simulation
             
         end
         
-        function [addtell] = addAtmosphere(counts,wavelength, telluric, skyback)
+        function [addtell] = addAtmosphere(wavelength,counts, telluric, skyback)
             
             skygrid = Simulation.resampleToGrid(skyback(:,1),skyback(:,2),wavelength);
             
@@ -137,11 +164,9 @@ classdef Simulation
             
             wavelength = wavelength(ind1:ind2)';
             spectrum = spectrum(ind1:ind2)';
-            
-            
+
             % sampled at the high end. 3 pixels at red, smooth function to
             % 6 pixels at blue.
-            
             
             pix_samp = linspace(6,3,length(wavelength));
             

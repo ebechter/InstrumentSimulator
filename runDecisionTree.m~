@@ -2,11 +2,13 @@ for ii = tracenum
    
 
     if strcmp(curve{ii}.source,'star')
-    spectral_cell{ii}(:,1) = star.wavelength;
-    
-        if curve{ii}.atmosphere == 1 
+        
+        spectral_cell{ii} = Simulation.addStar(spectrograph.maxR,spectrograph.pixSamp,...
+                                           simulation.scale,spectrograph.bandPass,star.wavelength,star.spectrum,star.rv);
+        
+        if curve{ii}.atmosphere == 1
             
-            spectral_cell{ii}(:,2) = Simulation.addAtmosphere(star.counts,star.wavelength, ...
+            spectral_cell{ii}(:,2) = Simulation.addAtmosphere(spectral_cell{ii}(:,1),spectral_cell{ii}(:,2), ...
                                                            atmosphere.telluric, atmosphere.skyback);
             
         end
@@ -15,14 +17,16 @@ for ii = tracenum
             
             % if we want ao, first check if its already been made
             
-            if exist('AO_throughput','var') ==0
+            if exist('AO_throughput','var') == 0
                     
                 % if not, make it
-                % [AO_throughput] = combinedImagerThroughput(objects);
+                [AO_throughput] = combinedImagerThroughput(AO_list);
+                spectral_cell{}
             else
-                add it
                 
-                % spectral_cell{ii} = Simulation.addAO(spectral_cell{ii},AO_throughput);
+                do stuff sort of again
+                
+                % spectral_cell{ii} = simulation.addAO(spectral_cell{ii},AO_throughput);
             end
         
         end                                                                                                                                                                                                                                                                                                                                                                       
@@ -32,7 +36,7 @@ for ii = tracenum
             
               starThroughput = Simulation.combineImagerThroughput(star_components);
                 
-              throughputGrid = Simulation.resampleToGrid(starThroughput(:,1)*1e-3,starThroughput(:,2),star.dsWavelength);
+              throughputGrid = Simulation.resampleToGrid(starThroughput(:,1)*1e-3,starThroughput(:,2),spectral_cell{ii}(:,1));
                 
               spectral_cell{ii}(:,2) = spectral_cell{ii}(:,2).*throughputGrid;
 
@@ -40,17 +44,27 @@ for ii = tracenum
             
         end
     
+        
+        
+        % cross disperse spectrum into nOrders orders, trim down wavelengths  
+        spectral_cell{ii} = Simulation.Xdisperse(spectral_cell{ii},nOrders,wave_coeff);
+        
+        if any(strcmp('spectrograph', curve{ii}.throughput)) == 1
             
+            % combine throughput of spectrograph. 
+            
+            spectral_cell{ii} = Simulation.addSpecThroughput(spectral_cell{ii},spectrograph.finalThroughput,nOrders);
+            
+            
+        end
         
-        spectral_cell{ii} = spectral_cell{1}
         
-        
-        1) always split into spectral orders - basically copy the spectrum n_order times 
-        3) trim to each spectral order 
-        
-        if we want the throughput then
-            include spectrograph throughput for each order
-        end 
+%         1) always split into spectral orders - basically copy the spectrum n_order times 
+%         3) trim to each spectral order 
+%         
+%         if we want the throughput then
+%             include spectrograph throughput for each order
+%         end 
         
 % split into spectral orders 
 %         

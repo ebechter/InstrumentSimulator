@@ -31,7 +31,7 @@ classdef Star < Spectra
             global allardpath
             global starfile
             starfile =  [pathprefix '/RefFiles/Star/fullpecautmamajek.xlsx'];
-            allardpath = [pathprefix '/../Spectral_Catalogs/FAllard/CIFIST6b_trimmed/'];
+            allardpath = [pathprefix '/../Spectral_Catalogs/FAllard/CIFIST6b_trimmed_resampled/'];
             
             %Load the calibrated spectrum. %Scales to magnitude and calculates color to temp
             obj = loadSpectrum(obj); %target.Spectrum is in w/m^2/micron, target.Wavelength in microns
@@ -39,8 +39,9 @@ classdef Star < Spectra
             obj.spectrum = Star.rotBroad(obj.vsini,obj.epsilon,obj.spectrum,obj.wavelength); %Broaden spectrum and overwrite target.spectrum property
             %Convert Spectum to counts and fills target.Counts property
 %             obj = energy2Counts(obj); %target.Counts is in counts/s/m^2/micron
-            obj.dsWavelength = Star.dopplerShift(obj.wavelength,obj.rv); %Shift Wavelength and assign DsWavelength
-            obj.counts = Star.energy2Counts(obj.dsWavelength,obj.spectrum);
+            obj.wavelength = Star.vacShift(obj.wavelength);
+%             obj.dsWavelength = Star.dopplerShift(obj.wavelength,obj.rv); %Shift Wavelength and assign DsWavelength
+%             obj.counts = Star.energy2Counts(obj.dsWavelength,obj.spectrum);
         end
         
         %methods for preparing spectrum and collecting ancillary info
@@ -67,9 +68,9 @@ classdef Star < Spectra
             wl = c(:,1);
             
             %flux conversion at surface of the star
-            fallard_factor = -8; %a constant on fallards website
-            fd_new = 10.^(fd+fallard_factor);%conversion posted on fallard website
-            joules = fd_new*1E-7;% conversion from ergs to joules
+%             fallard_factor = -8; %a constant on fallards website
+%             fd_new = 10.^(fd+fallard_factor);%conversion posted on fallard website
+            joules = fd*1E-7;% conversion from ergs to joules
             jm = joules*1E4; %/cm^2 to /m^2
             jmu= jm*1E4; %/angstroms to /microns
             mu = wl*1E-4; %angstroms to microns
@@ -97,16 +98,12 @@ classdef Star < Spectra
             obj.rmag = R_mag;
             obj.imag = I_mag;
             
-            R = 275e3;
-            pix_samp = 3;
-            scale = 3;
-            dlam = 1000/R/pix_samp;
-            step = dlam/scale;
-            
-            lambda = (900:step:1350)./1e3;
-            interpflux = interp1(wavelength, spfluxden, lambda,'linear');
-            obj.spectrum = interpflux';
-            obj.wavelength = lambda';
+            temp = diff(wavelength);
+            dlam = [temp(1) temp];
+            flux = spfluxden.*dlam;
+            obj.spectrum = flux;
+            obj.wavelength = wavelength; 
+
         end
     end
      
