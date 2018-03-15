@@ -13,8 +13,8 @@ for ii = tracenum
             
         end
         
-        spectral_cell{ii}(:,2) = addCollectingArea(spectral_cell{ii}(:,2),lbt.,blockFrac)
-        
+        spectral_cell{ii}(:,2) = Simulation.addCollectingArea(spectral_cell{ii}(:,2),lbt.apDiameter,lbt.blockFrac);
+        spectral_cell{ii}(:,2) = Star.fluxDenToflux(spectral_cell{ii}(:,1),spectral_cell{ii}(:,2));
         
         if curve{ii}.AO == 1 
             
@@ -23,10 +23,10 @@ for ii = tracenum
             if exist('AO_throughput','var') == 0
                     
                 % if not, make it
-                [AO_throughput] = combinedImagerThroughput(AO_list);
+                [AO_throughput] = Simulation.combineImagerThroughput(AO_list);
                 AOFlux = Simulation.resampleToGrid(AO_throughput(:,1)*1e-3,AO_throughput(:,2),spectral_cell{ii}(:,1));
                 
-                WFSthing = spectral_cell{ii}(:,2).*AOFLux;
+                WFSthing = spectral_cell{ii}(:,2).*AOFlux;
                 
                 
             else

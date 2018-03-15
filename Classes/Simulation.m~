@@ -20,9 +20,9 @@ classdef Simulation
         
         function [sampledstar] = addStar(R,pixSamp,scale,wavelength,counts,rv)
             
-            
-            % Define wavelength step (input in nm, output in microns) using maximum resolving power (R),
-            % pixSamp, and scale factor
+
+            % Define wavelength step (input in nm, output in microns) using maximum resolving power (R), 
+            % pixSamp, and scale factor            
             dlam = 1000/R/pixSamp;
             step = dlam/scale;
             interplambda = wavelength(1):step:wavelength(end);
@@ -170,7 +170,7 @@ classdef Simulation
             
             wavelength = wavelength(ind1:ind2)';
             spectrum = spectrum(ind1:ind2)';
-            
+
             % sampled at the high end. 3 pixels at red, smooth function to
             % 6 pixels at blue.
             
@@ -367,18 +367,9 @@ classdef Simulation
             
         end
         
-        function [trimWave,trimCounts] = trimToBand(wavelength,counts,bandPass)
-            
-            ind = wavelength<=bandPass(2) & wavelength>=bandPass(1);
-            
-            trimWave = wavelength(ind);
-            trimCounts = counts(ind);
-            
-            
+        function trimToBand(wavelength,counts,bandPass)
         end
-            
-            
-               
+        
     end
 end
 

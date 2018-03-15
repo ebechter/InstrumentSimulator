@@ -3,7 +3,7 @@
 clear; close all; clc
 addpath(genpath(pwd))
 parflag = true;
-scale = 3;
+scale = 1;
 load polycoeffs2
 load chebycoeffs2
 nOrders = 2;
@@ -12,7 +12,7 @@ cheby=0;
 curve{1}.source = 'star';
 curve{1}.atmosphere = 1;
 curve{1}.throughput = {'lbt','lbti','fiber','spectrograph'};
-curve{1}.AO = 0;
+curve{1}.AO = 1;
 
 curve{2}.source = 'etalon';
 curve{2}.atmosphere = 0;
