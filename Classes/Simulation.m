@@ -6,13 +6,15 @@ classdef Simulation
     
     methods
         function obj = Simulation(scale)
-        
-            if nargin == 0 
+            
+            if nargin == 0
                 obj.scale = 1;
             else
                 obj.scale = scale;
             end
         end
+        
+        
         
     end
     
@@ -376,9 +378,203 @@ classdef Simulation
             
             
         end
+        
+        
+        function [filename,refSeeing] = calculateStrehlRatio(AO_type,seeing,wfsCounts,zenith)
+            strehl_dir = pwd;
+            refS=[0.6,0.8,1];
+            [~,indmatch] = min(abs(refS-seeing));
             
+            if AO_type == 1
+                file = '\RefFiles\AO\FLAO_Strehl.csv';
+                refSeeing = 1;
+            else
+                if indmatch == 1
+                    file = '\RefFiles\AO\SOUL_Strehl_06_vib.csv';
+                    refSeeing = refS(indmatch);
+                elseif indmatch == 2
+                    file = 'RefFiles\SOUL_Strehl_08_vib.csv';
+                    refSeeing = refS(indmatch);
+                elseif indmatch == 3
+                    file = 'RefFiles\SOUL_Strehl_1_vib.csv';
+                    refSeeing = refS(indmatch);
+                end
+            end
             
-               
+            filename = strcat(strehl_dir,file); % found the closest reference filename for this AO system
+            
+            %--------------------------------------------------------------------------%
+            %--------------------------------------------------------------------------%
+            %Description: Read in reference WFS file from LBT ao group
+            
+            delimiter = ',';
+            if nargin<=2
+                startRow = 2;
+                endRow = inf;
+            end
+            
+            formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
+            
+            % Open the text file.
+            fileID = fopen(filename,'r');
+            dataArray = textscan(fileID, formatSpec, endRow(1)-startRow(1)+1, 'Delimiter', delimiter, 'HeaderLines', startRow(1)-1, 'ReturnOnError', false);
+            for block=2:length(startRow)
+                frewind(fileID);
+                dataArrayBlock = textscan(fileID, formatSpec, endRow(block)-startRow(block)+1, 'Delimiter', delimiter, 'HeaderLines', startRow(block)-1, 'ReturnOnError', false);
+                for col=1:length(dataArray)
+                    dataArray{col} = [dataArray{col};dataArrayBlock{col}];
+                end
+            end
+            % Close the text file.
+            fclose(fileID);
+            
+            % Allocate imported array to column variable names
+            MagR = dataArray{:, 1}; %r amgnitude
+            SRR = dataArray{:, 2}; %R band Strehl ratio
+            SRI = dataArray{:, 3}; %I band Strehl ratio
+            SRY = dataArray{:, 4}; %Y band Strehl ratio
+            SRJ = dataArray{:, 5}; %J band Strehl ratio
+            SRH = dataArray{:, 6}; %H band Strehl ratio
+            SRK = dataArray{:, 7}; %K band Strehl ratio
+            SRL = dataArray{:, 8}; %L band Strehl ratio
+            SRM = dataArray{:, 9}; %M band Strehl ratio
+            Totalnm = dataArray{:, 10}; % total nm (not sure what this is)
+            bin = dataArray{:, 11}; % WFS binning mode
+            modamplD = dataArray{:, 12}; % not sure what this is I/D are units
+            fsHz = dataArray{:, 13}; % frame rate in Hz
+            fluxphfr = dataArray{:, 14}; % photons/frame
+            fluxphfrsa = dataArray{:, 15}; % photons/frame/sub aperture
+            fluxphfrpix = dataArray{:, 16}; % photons/frame/pixel
+            modes1 = dataArray{:, 17}; % number of AO modes
+            Photmodes = dataArray{:, 18}; %photons /mode
+            gain = dataArray{:, 19}; % gain
+            TTgain = dataArray{:, 20}; % tip/tilt gain
+            
+            %--------------------------------------------------------------------------%
+            %--------------------------------------------------------------------------%
+            %Description: Calcaulte the Strehl ratio based on incident photons to WFS
+            %Inputs: photons/second/subaperture. The # of subapertures depends on the binning mode.
+            %The FLAO system has 30 max across the pupil which is reduced by binning.
+            
+            %******* I believe the AO group sent data which double counted the binning
+            %effect of their detector. I've checked this using their own numbers send
+            %by Guido and rechecked again 3/6/19. 1.99E10 ph/s/m^2 is the 0th order NGS
+            %(close to G2). Using this and 0.32 (0.29 in paper) throughput for
+            %atmosphere, LBT, WFS, the total number of photons calculated is more than
+            %the LBTI reference files by a factor of the binning squared. Thus to
+            %remove the error, we need to multiply the refernce file numbers by the binning squared. Ultimately
+            %we get the same strehl ratio for a G2 star at all the rights magnitudes. I
+            %never got around to bringing this up with them...
+            
+            phfr= (fluxphfr(:,1).*(bin.^2)); %remove double binning effect by multiplying binning factor squared
+            phs = phfr(:,1).*fsHz; %photons/second
+            
+            % phfrpix_binned = fluxphfrpix(:,1).*(bin.^2);
+            % phfrpix = fluxphfrpix(:,1);
+            % phfrpixppl = phfrpix/4;
+            
+            high = max(phs);
+            low  = 0;
+            num = 1000000;
+            xq = linspace(low,high,num);
+            vqy = interp1(phs,SRY,xq,'pchip');
+            vqj = interp1(phs,SRJ,xq,'pchip');
+            vqr = interp1(phs,SRR,xq,'pchip');
+            vqi = interp1(phs,SRI,xq,'pchip');
+            vqh = interp1(phs,SRH,xq,'pchip');
+            vqk = interp1(phs,SRK,xq,'pchip');
+            vql = interp1(phs,SRL,xq,'pchip');
+            vqm = interp1(phs,SRM,xq,'pchip');
+            
+            if counts > high
+                StrehlY = max(vqy);
+                StrehlJ = max(vqj);
+                StrehlR = max(vqr);
+                StrehlI = max(vqi);
+                StrehlH = max(vqh);
+                StrehlK = max(vqk);
+                StrehlL = max(vql);
+                StrehlM = max(vqm);
+                ind = 1;
+            else
+                ind = find(xq>counts,1,'first');
+                StrehlY = vqy(ind);
+                StrehlJ = vqj(ind);
+                StrehlR = vqr(ind);
+                StrehlI = vqi(ind);
+                StrehlH = vqh(ind);
+                StrehlK = vqk(ind);
+                StrehlL = vql(ind);
+                StrehlM = vqm(ind);
+            end
+            
+            if AO_type ==1
+                fs = [1000.1 1000.01 1000.001 1000.0001 200 100];
+                bin = [1.0001 1.001 2 4 4.0001 4.001 4.01];
+            else
+                fs = [1500.1 1500.01 1250 750 300 100];
+                bin = [1.0001 1.001 1.01 2 3 4];
+            end
+            
+            ref_SR = [StrehlR,StrehlI,StrehlY,StrehlJ,StrehlH,StrehlK,StrehlL,StrehlM]./100; %Strehl ratio samples points units : 0-1;
+            
+            %--------------------------------------------------------------------------%
+            %--------------------------------------------------------------------------%
+            %Description: Rescale the Strehl ratio as a function of seeing
+            %Input: Strehl ratio from 0-1, seeing in arcseconds
+            %Documentation: assume the SR scales as exp(-sigma^2), and sigma^2
+            %scales as is (1/r0)5/3. (found in Andreas Quirrenbach citation...).
+            % seeing angle ~ lambda/r0 so r0 ~ 1/seeing for a given wavelength
+            % r1/r2 = seeing1/seeing2 at a lambda
+            
+            SR = exp((seeing/refSeeing)^(5/3).*log(ref_SR)); % rescale the Strehl ratio based on seeing ;
+            
+            %--------------------------------------------------------------------------%
+            %--------------------------------------------------------------------------%
+            %Description: Rescale the Strehl ratio as a function of zenith angle
+            %Input: Strehl ratio from 0-1, zenith angle in radians
+            %Documentation:
+            %Roddier A0 Textbook and Devaney 2007
+            %SR = exp(-sigma^2)
+            %r0 ~ cos(z)^3/5 scale factor for seeing angle (from Francois Roddier AO book)
+            %The intention is to rescale the freid parameter which is buried in a
+            %constant exp -(A/ro)^-5/3 or exp(-B). ro scales as cos(z)^3/5 then the constant (B) scales
+            %as (cos(z)^3/5)^-5/3 which is just sec(z)
+            %SR(zenith) = exp(-alog(SR(0)) * airmass(zenith)) = exp(-alog(SR(0)) * (seeing(zenith)/seeing(0))^(5./3.))
+            %where
+            %seeing(zenith) = seeing(0)*airmass(zenith)^(3./5.)
+            %airmass(zenith) = 1./cos(zenith/180.*!pi)
+            %--------------------------------------------------------------------------%
+            
+            B = abs(log(SR));% constant
+            scale = sec(z);%.^(3/5).^(5/3); % also known as sec(z)
+            SR_z = exp(-B.*scale);% rescale the strehl ratio and multiply by 100 to get back to % Strehl
+            
+            %--------------------------------------------------------------------------%
+            %--------------------------------------------------------------------------%
+            %Description: Interpolate the Strehl Ratio samples over wavlength band using
+            % pchip method.
+            %Input: Strehl ratio from 0-1 and wavelength samples in microns
+            %Documentation:
+            % Interpolation method is quick and easy for a smooth SR in ilocater band.
+            % This could be replaced in the future by analytic scaling (fried parameter
+            % ,r0,scales as lambda^(6/5), so a fitting method could be
+            % used as well
+            
+            Strehl = SR_z;
+            step = 1E-4; % sampling in microns
+            Band_centers = [0.640,0.750,1.020,1.250,1.650,2.200,3.805,4.781];% from SOUL Excel document header information
+            xq = Band_centers(1,1):step:Band_centers(1,end); %generate highly sampled wavelength vector
+            SR = interp1(Band_centers, Strehl,xq,'pchip');
+            SR_interp(:,1) = xq;
+            SR_interp(:,2) = SR;
+            
+        end
+
+
+        
+        
+        
     end
 end
 
@@ -398,7 +594,7 @@ ny=top-bottom+1;
 
 if nx < 1 || ny < 1
     
-%     disp('clipping missed grid')
+    %     disp('clipping missed grid')
     ret = 0;
     areas = 0;
     return
@@ -408,7 +604,7 @@ end
 npix=nx*ny;
 
 if npix <= 0
-%     disp('clipping missed grid')
+    %     disp('clipping missed grid')
     ret = 0;
     areas = 0;
     return
@@ -418,7 +614,7 @@ ind = 1;
 
 areas = [];%zeros(1,npix);
 ret = [];%zeros(1,npix);
-% 
+%
 % figure(1)
 % plot([px,px(1)],[py,py(1)],'-k')
 
@@ -431,21 +627,21 @@ for p = 1
         for i =left(p):right(p)
             px_out = px1;
             py_out = py1;
-%             polyclip(i,j,px_out,py_out)
+            %             polyclip(i,j,px_out,py_out)
             Polygon=[px_out;py_out]';
             unitPixel = [i,i+1,i+1,i;j,j,j+1,j+1]';
             
             clippedPolygon = sutherlandHodgman(Polygon,unitPixel);
-%             figure(1)
-%             hold on
-                 
+            %             figure(1)
+            %             hold on
+            
             
             if isempty(clippedPolygon) ==1
-                continue 
+                continue
                 
             end
-%             plot([clippedPolygon(:,1)',clippedPolygon(1,1)],[clippedPolygon(:,2)',clippedPolygon(1,2)],'-o')
-           
+            %             plot([clippedPolygon(:,1)',clippedPolygon(1,1)],[clippedPolygon(:,2)',clippedPolygon(1,2)],'-o')
+            
             
             ret(ind)=i+j*sx;
             
@@ -453,8 +649,8 @@ for p = 1
             px_out = clippedPolygon(:,1);
             py_out = clippedPolygon(:,2);
             
-
-                       
+            
+            
             areas(ind) = abs(sum(px_out.* circshift(py_out,-1)-py_out.*circshift(px_out,-1))./2);
             ind = ind+1;
         end
@@ -470,87 +666,87 @@ end
 function clippedPolygon = sutherlandHodgman(subjectPolygon,clipPolygon)
 %The inputs are a table of x-y pairs for the verticies of the subject
 %polygon and boundary polygon. (x values in column 1 and y values in column
-%2) The output is a table of x-y pairs for the clipped version of the 
-%subject polygon. 
+%2) The output is a table of x-y pairs for the clipped version of the
+%subject polygon.
 %% Helper Functions
- 
-    %computerIntersection() assumes the two lines intersect
+
+%computerIntersection() assumes the two lines intersect
     function intersection = computeIntersection(line1,line2)
- 
+        
         %this is an implementation of
         %http://en.wikipedia.org/wiki/Line-line_intersection
- 
+        
         intersection = zeros(1,2);
- 
+        
         detL1 = det(line1);
         detL2 = det(line2);
- 
+        
         detL1x = det([line1(:,1),[1;1]]);
         detL1y = det([line1(:,2),[1;1]]);
- 
+        
         detL2x = det([line2(:,1),[1;1]]);
         detL2y = det([line2(:,2),[1;1]]);
- 
+        
         denominator = det([detL1x detL1y;detL2x detL2y]);
- 
+        
         intersection(1) = det([detL1 detL1x;detL2 detL2x]) / denominator;
         intersection(2) = det([detL1 detL1y;detL2 detL2y]) / denominator;
- 
+        
     end %computeIntersection
- 
-    %inside() assumes the boundary is oriented counter-clockwise
+
+%inside() assumes the boundary is oriented counter-clockwise
     function in = inside(point,boundary)
- 
+        
         pointPositionVector = [diff([point;boundary(1,:)]) 0];
         boundaryVector = [diff(boundary) 0];
         crossVector = cross(pointPositionVector,boundaryVector);
- 
+        
         if ( crossVector(3) <= 0 )
             in = true;
         else
             in = false;
         end
- 
+        
     end %inside
- 
+
 %% Sutherland-Hodgman Algorithm
- 
-    clippedPolygon = subjectPolygon;
-    numVerticies = size(clipPolygon,1);
-    clipVertexPrevious = clipPolygon(end,:);
- 
-    for clipVertex = (1:numVerticies)
- 
-        clipBoundary = [clipPolygon(clipVertex,:) ; clipVertexPrevious];
- 
-        inputList = clippedPolygon;
- 
-        clippedPolygon = [];
-        if ~isempty(inputList)
-            previousVertex = inputList(end,:);
-        end
- 
-        for subjectVertex = (1:size(inputList,1))
- 
-            if ( inside(inputList(subjectVertex,:),clipBoundary) )
- 
-                if( not(inside(previousVertex,clipBoundary)) )  
-                    subjectLineSegment = [previousVertex;inputList(subjectVertex,:)];
-                    clippedPolygon(end+1,1:2) = computeIntersection(clipBoundary,subjectLineSegment);
-                end
- 
-                clippedPolygon(end+1,1:2) = inputList(subjectVertex,:);
- 
-            elseif( inside(previousVertex,clipBoundary) )
-                    subjectLineSegment = [previousVertex;inputList(subjectVertex,:)];
-                    clippedPolygon(end+1,1:2) = computeIntersection(clipBoundary,subjectLineSegment);                            
+
+clippedPolygon = subjectPolygon;
+numVerticies = size(clipPolygon,1);
+clipVertexPrevious = clipPolygon(end,:);
+
+for clipVertex = (1:numVerticies)
+    
+    clipBoundary = [clipPolygon(clipVertex,:) ; clipVertexPrevious];
+    
+    inputList = clippedPolygon;
+    
+    clippedPolygon = [];
+    if ~isempty(inputList)
+        previousVertex = inputList(end,:);
+    end
+    
+    for subjectVertex = (1:size(inputList,1))
+        
+        if ( inside(inputList(subjectVertex,:),clipBoundary) )
+            
+            if( not(inside(previousVertex,clipBoundary)) )
+                subjectLineSegment = [previousVertex;inputList(subjectVertex,:)];
+                clippedPolygon(end+1,1:2) = computeIntersection(clipBoundary,subjectLineSegment);
             end
- 
-            previousVertex = inputList(subjectVertex,:);
-            clipVertexPrevious = clipPolygon(clipVertex,:);
- 
-        end %for subject verticies                
-    end %for boundary verticies
+            
+            clippedPolygon(end+1,1:2) = inputList(subjectVertex,:);
+            
+        elseif( inside(previousVertex,clipBoundary) )
+            subjectLineSegment = [previousVertex;inputList(subjectVertex,:)];
+            clippedPolygon(end+1,1:2) = computeIntersection(clipBoundary,subjectLineSegment);
+        end
+        
+        previousVertex = inputList(subjectVertex,:);
+        clipVertexPrevious = clipPolygon(clipVertex,:);
+        
+    end %for subject verticies
+end %for boundary verticies
 end %sutherlandHodgman
 function F=circ_gauss(X,Y,Sigma,center)
 %--------------------------------------------------------------------------
@@ -573,7 +769,7 @@ function F=circ_gauss(X,Y,Sigma,center)
 %            the center of the Gaussian.
 
 
-% Example: 
+% Example:
 %          F=circ_gauss(MatX,MatY,[1],[0 0]);
 %          surface(F);
 %--------------------------------------------------------------------------
@@ -596,12 +792,12 @@ F = F./sum(sum(F));
 %    I = find(MatR>cutoff);
 %    F(I) = 0;
 % end
-% 
+%
 % if (isnan(Norm)),
 %    % do not normalize
 % else
 %    F = Norm.*F./sumnd(F);
 % end
-end    
-    
-    
+end
+
+
