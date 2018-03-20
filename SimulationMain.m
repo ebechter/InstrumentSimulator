@@ -36,7 +36,7 @@ for ii = tracenum
         
     elseif strcmp('star', curve{ii}.source) == 1 && exist('star','var') == 0
         % make a star
-        star = Star('G2V',11.8,1,2,0,'counts');
+        star = Star('M0V',11.8,1,2,0,'counts');
         
     elseif strcmp('flat', curve{ii}.source) == 1 && exist('flat','var') == 0
         % make a flat spectrum

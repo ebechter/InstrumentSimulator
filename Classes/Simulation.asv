@@ -13,9 +13,7 @@ classdef Simulation
                 obj.scale = scale;
             end
         end
-        
-        
-        
+
     end
     
     methods(Static)
@@ -72,16 +70,19 @@ classdef Simulation
             
         end
         
-        function [starThroughput] = combineImagerThroughput(star_components)
-            comTput{1} = star_components(1).finalThroughput;
+        function [starThroughput,comTput] = combineImagerThroughput(star_components)
+            comTput{1,1} = star_components(1).finalThroughput;
+            comTput{2,1} = star_components(1).name;
             
             for ii = 2:size(star_components,2) %loop over cellarry size (i.e. surfaces)
-                [comTput{ii}(:,1),comTput{ii}(:,2)] = Instrument.multiply_curves...
-                    (comTput{ii-1}(:,1),comTput{ii-1}(:,2),...
+                [comTput{1,ii}(:,1),comTput{1,ii}(:,2)] = Instrument.multiply_curves...
+                    (comTput{1,ii-1}(:,1),comTput{1,ii-1}(:,2),...
                     star_components(ii).finalThroughput(:,1),star_components(ii).finalThroughput(:,2));
+                
+                comTput{2,ii} = star_components(ii).name; % add the object name to the cell array for progression plots
             end
             
-            starThroughput = comTput{end};
+            starThroughput = comTput{1,end};
         end
         
         function [output] = Xdisperse(inputSpectrum,nOrders,waveCoeff)
@@ -379,13 +380,12 @@ classdef Simulation
             
         end
         
-        
-        function [SR_interp] = calculateStrehlRatio(AO_type,seeing,counts,zenith)
+        function [SR_interp] = calculateStrehlRatio(aoType,seeing,counts,zenith)
             strehl_dir = pwd;
             refS=[0.6,0.8,1];
             [~,indmatch] = min(abs(refS-seeing));
             
-            if AO_type == 1
+            if strcmp(aoType,'FLAO') == 1
                 file = '/RefFiles/AO/FLAO_Strehl.csv';
                 refSeeing = 1;
             else
@@ -393,10 +393,10 @@ classdef Simulation
                     file = '/RefFiles/AO/SOUL_Strehl_06_vib.csv';
                     refSeeing = refS(indmatch);
                 elseif indmatch == 2
-                    file = 'RefFiles/AO/SOUL_Strehl_08_vib.csv';
+                    file = '/RefFiles/AO/SOUL_Strehl_08_vib.csv';
                     refSeeing = refS(indmatch);
                 elseif indmatch == 3
-                    file = 'RefFiles/AO/SOUL_Strehl_1_vib.csv';
+                    file = '/RefFiles/AO/SOUL_Strehl_1_vib.csv';
                     refSeeing = refS(indmatch);
                 end
             end
@@ -408,10 +408,8 @@ classdef Simulation
             %Description: Read in reference WFS file from LBT ao group
             
             delimiter = ',';
-                startRow = 2;
-                endRow = inf;
-
-            
+            startRow = 2;
+            endRow = inf;
             formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
             
             % Open the text file.
@@ -507,7 +505,7 @@ classdef Simulation
                 StrehlM = vqm(ind);
             end
             
-            if AO_type ==1
+            if strcmp(aoType,'FLAO') == 1
                 fs = [1000.1 1000.01 1000.001 1000.0001 200 100];
                 bin = [1.0001 1.001 2 4 4.0001 4.001 4.01];
             else
@@ -570,7 +568,61 @@ classdef Simulation
             
         end
 
+        function [] = ProgressionPlot(compTput)
+            handle =[];
+            
+            %% Custom color lists, yo
+            d = get(groot,'DefaultAxesColorOrder');
+            for ii = 1:7
+                colors{ii}=d(ii,:);
+            end
+            colors{8}= [0.175 0.175 0.175];
+            colors{9}= colors{2};
+            colors{10}= colors{3};
+            colors{11} =[0 0.3 0];
+            clear d
+            
+            labels = [];
+            for ii = 1:size(compTput,2)
+                temp{1} = compTput{2,ii};
+                labels = [labels;temp];
+            end
+            
+            m = size(compTput,2);
+            
+            if strcmp(labels(end),'Spectrograph')
+                
+                n = m - 1;
+            else
+                n = m;
+            end
+            
+            
+            figure
+            hold on
 
+            for ii = 1:n
+                h{ii} = plot(compTput{1,ii}(:,1),compTput{1,ii}(:,2),'.','Markersize',8,'Color',colors{ii});
+                handle = [handle h{ii}];
+            end
+            
+            for jj = 1:size(compTput{m},2)
+                h{ii+1}=plot(compTput{1,m}{1,2}(:,jj),compTput{1,m}{1,1}(:,jj),'.','Color',colors{11},'Markersize',8);
+                if jj == 1
+                    handle = [handle h{ii+1}];
+                end
+            end
+            l=legend(handle,labels,'Location','best');
+            ylim([0 1])
+            xlim([900 1350])
+            ylabel('Throughput')
+            xlabel('\lambda nm')
+            l.FontSize = 10;
+            l.Box = 'off';
+            box on
+            ax = gca;
+            ax.LineWidth = 1.5;
+        end
         
         
         

@@ -24,6 +24,7 @@ classdef Spectrograph < Instrument
                 curveDirectory = [pwd '/RefFiles/Curves/Spectrograph/'];                
                 maxR = 275e3;
                 pixSamp = 3;
+                
             else
                 
             end
@@ -33,6 +34,7 @@ classdef Spectrograph < Instrument
             obj.opticalModel = opticalModel;
             obj.maxR = maxR;
             obj.pixSamp = pixSamp;
+            obj.name = 'Spectrograph';
             [obj] = loadOpticalModelCurves(obj,curveDirectory);
             [obj] = trimThroughput(obj);
             [obj] = R6Grating(obj,curveDirectory);

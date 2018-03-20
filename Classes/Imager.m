@@ -29,6 +29,7 @@ classdef Imager < Instrument
                 opticalModel{9}= struct('name','L5','type','triplet lens','coatingName','NIR','number',1,'angle',[],'efficiency',[]);
                 opticalModel{10}= struct('name','ANDOR','type','detector','coatingName','AndorZyla42','number',1,'angle',[],'efficiency',[]);
                 
+                name = 'Andor Channel';
                 plateScale = [];
                 pixelPitch = [];
                 detectorDimensions = [];
@@ -47,6 +48,7 @@ classdef Imager < Instrument
                 pixelPitch = [];
                 detectorDimensions = [];
                 plateScale =[];
+                name = 'Wide Field Channel';
             
              elseif strcmp(type,'FIBER') == 1
                 
@@ -63,10 +65,11 @@ classdef Imager < Instrument
                 opticalModel{11}= struct('name','L3','type','triplet lens','coatingName','NIR','number',1,'angle',[],'efficiency',[]);
                 
                
-                bandPass = [970,1300];
+                bandPass = [965,1305];
                 pixelPitch = [];
                 detectorDimensions = [];
                 plateScale = [];
+                name = 'Fiber Channel';
                 
             elseif strcmp(type,'QUADCELL') == 1
                 
@@ -86,6 +89,7 @@ classdef Imager < Instrument
                 pixelPitch = [];
                 detectorDimensions = [];
                 plateScale = [];
+                name = 'Quad Cell Channel';
                            
             elseif strcmp(type,'LBT') == 1
                 opticalModel{1} = struct('name','Primary','type','mirror','coatingName','LBT_PS_Al','number',1,'angle',[],'efficiency',[]);
@@ -98,6 +102,7 @@ classdef Imager < Instrument
                 plateScale = [];
                 blockFrac = 0.108; % value listed as 0.889
                 apDiameter = 8.22; % meters (IR effective collecting area, supposedly)
+                name = 'LBT';
                 
                 
             elseif strcmp(type,'LBTI') == 1
@@ -112,6 +117,7 @@ classdef Imager < Instrument
                 pixelPitch = [];
                 detectorDimensions = [];
                 plateScale = [];
+                name = 'LBTI';
                 
             end
             curveDirectory = [pwd '/RefFiles/Curves/Instrument/'];
@@ -122,6 +128,7 @@ classdef Imager < Instrument
             obj.plateScale = plateScale;
             obj.blockFrac = blockFrac;
             obj.apDiameter = apDiameter;
+            obj.name = name;
             [obj] = loadOpticalModelCurves(obj,curveDirectory);
             [obj] = trimThroughput(obj);
             [obj] = intThroughput(obj);

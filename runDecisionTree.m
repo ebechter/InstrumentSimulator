@@ -41,7 +41,7 @@ for ii = tracenum
             
             if exist('starThroughput','var') ==0 
             
-              [starThroughput,throughputProgression] = Simulation.combineImagerThroughput(star_components);
+              [starThroughput,tputProg] = Simulation.combineImagerThroughput(star_components);
                 
               throughputGrid = Simulation.resampleToGrid(starThroughput(:,1)*1e-3,starThroughput(:,2),spectral_cell{ii}(:,1));
                 
@@ -58,10 +58,21 @@ for ii = tracenum
         
         if any(strcmp('spectrograph', curve{ii}.throughput)) == 1
             
-            % combine throughput of spectrograph. 
+            % combine throughput of spectrograph.
             
             spectral_cell{ii} = Simulation.addSpecThroughput(spectral_cell{ii},spectrograph.finalThroughput,nOrders);
             
+            for ii = 1:nOrders
+                new_y = Simulation.resampleToGrid(spectrograph.finalThroughput{2}(:,ii),spectrograph.finalThroughput{1}(:,ii),tputProg{1,end}(:,1));
+                tempTput{1}(:,ii) = tputProg{1,end}(:,1);
+                tempTput{2}(:,ii) = new_y .* tputProg{1,end}(:,2);
+            end
+            
+            %[tempTput] = Simulation.addSpecThroughput(,spectrograph.finalThroughput,nOrders);
+            specCell{1} = tempTput;
+            specCell{2,1} = spectrograph.name;
+            tputProg = [tputProg specCell];
+            clear specCell tempTput
             
         end
         

@@ -21,9 +21,9 @@ classdef Simulation
         function [sampledstar] = addStar(R,pixSamp,scale,wavelength,counts,rv)
             
             
-            % Define wavelength step (input in nm, output in microns) using maximum resolving power (R),
+            % Define wavelength step (input in microns, output in microns) using maximum resolving power (R),
             % pixSamp, and scale factor
-            dlam = 1000/R/pixSamp;
+            dlam = 1/R/pixSamp;
             step = dlam/scale;
             interplambda = wavelength(1):step:wavelength(end);
             interpflux = interp1(wavelength, counts, interplambda,'linear');
@@ -71,16 +71,18 @@ classdef Simulation
         end
         
         function [starThroughput,comTput] = combineImagerThroughput(star_components)
-            comTput{1} = star_components(1).finalThroughput;
-   
+            comTput{1,1} = star_components(1).finalThroughput;
+            comTput{2,1} = star_components(1).name;
             
             for ii = 2:size(star_components,2) %loop over cellarry size (i.e. surfaces)
-                [comTput{ii}(:,1),comTput{ii}(:,2)] = Instrument.multiply_curves...
-                    (comTput{ii-1}(:,1),comTput{ii-1}(:,2),...
+                [comTput{1,ii}(:,1),comTput{1,ii}(:,2)] = Instrument.multiply_curves...
+                    (comTput{1,ii-1}(:,1),comTput{1,ii-1}(:,2),...
                     star_components(ii).finalThroughput(:,1),star_components(ii).finalThroughput(:,2));
+                
+                comTput{2,ii} = star_components(ii).name; % add the object name to the cell array for progression plots
             end
             
-            starThroughput = comTput{end};
+            starThroughput = comTput{1,end};
         end
         
         function [output] = Xdisperse(inputSpectrum,nOrders,waveCoeff)
@@ -101,7 +103,7 @@ classdef Simulation
         function [OutWavelength, OutSpectrum] = trimOrders (wavelength,spectrum,wave_coeff,nOrders)
             
             ord = size(spectrum, 2); % what is the largert order (39)
-            buffer_edge = 25; %set detector edge (buffered by 2mm)
+            buffer_edge = 25; %set detector edge (buffered by 5mm)
             
             ind_lim1 = find(wavelength(:,ord) <= polyval(wave_coeff(ord,:,1),-buffer_edge),1,'last');
             ind_lim2 = find(wavelength(:,ord) >= polyval(wave_coeff(ord,:,1), buffer_edge),1,'first');
@@ -378,7 +380,6 @@ classdef Simulation
             
         end
         
-        
         function [SR_interp] = calculateStrehlRatio(aoType,seeing,counts,zenith)
             strehl_dir = pwd;
             refS=[0.6,0.8,1];
@@ -567,7 +568,66 @@ classdef Simulation
             
         end
 
+        function [] = ProgressionPlot(compTput)
+            handle =[];
+            
+            %% Custom color lists, yo
+            d = get(groot,'DefaultAxesColorOrder');
+            for ii = 1:7
+                colors{ii}=d(ii,:);
+            end
+            colors{8}= [0.175 0.175 0.175];
+            colors{9}= colors{2};
+            colors{10}= colors{3};
+            colors{11} =[0 0.3 0];
+            clear d
+            
+            labels = [];
+            for ii = 1:size(compTput,2)
+                temp{1} = compTput{2,ii};
+                labels = [labels;temp];
+            end
+            
+            m = size(compTput,2);
+            
+            if strcmp(labels(end),'Spectrograph')
+                
+                n = m - 1;
+            else
+                n = m;
+            end
+            
+            
+            figure
+            hold on
 
+            for ii = 1:n
+                h{ii} = plot(compTput{1,ii}(:,1),compTput{1,ii}(:,2),'.','Markersize',8,'Color',colors{ii});
+                handle = [handle h{ii}];
+            end
+            
+            if n~= m
+            
+            for jj = 1:size(compTput{1,m}{1,2},2)
+                h{ii+1}=plot(compTput{1,m}{1,1}(:,jj),compTput{1,m}{1,2}(:,jj),'.','Color',colors{11},'Markersize',8);
+                if jj == 1
+                    handle = [handle h{ii+1}];
+                end
+            end
+            
+            end
+            
+            l=legend(handle,labels,'Location','best');
+            ylim([0 1])
+            xlim([900 1350])
+            ylabel('Throughput')
+            xlabel('\lambda nm')
+            l.FontSize = 10;
+            l.Box = 'off';
+            box on
+            ax = gca;
+            ax.LineWidth = 1.5;
+        end
         
         
         
