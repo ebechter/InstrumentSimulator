@@ -1,6 +1,6 @@
 % simulation Main Script
 % clear up the workspace
-clear; close all; clc
+clear; clc
 addpath(genpath(pwd))
 parflag = true;
 scale = 1;
@@ -8,7 +8,10 @@ load polycoeffs2
 load chebycoeffs2
 nOrders = 2;
 cheby=0;
-
+aoType = 'FLAO'; % 'FLAO' or 'SOUL'
+entWindow = []; %'ilocater' (ECI) or  empty for default lbti []
+zenith = 0*(pi/180); %rad
+seeing = 0.6; %arcsec
 curve{1}.source = 'star';
 curve{1}.atmosphere = 1;
 curve{1}.throughput = {'lbt','lbti','fiber','spectrograph'};
@@ -33,7 +36,7 @@ for ii = tracenum
         
     elseif strcmp('star', curve{ii}.source) == 1 && exist('star','var') == 0
         % make a star
-        star = Star();
+        star = Star('G2V',11.8,1,2,0,'counts');
         
     elseif strcmp('flat', curve{ii}.source) == 1 && exist('flat','var') == 0
         % make a flat spectrum
@@ -63,10 +66,7 @@ for ii = tracenum
         % make the lbt throughput
         lbt = Imager('LBT');
         star_components = [star_components, lbt];
-        
-        if curve{ii}.AO == 1
-            AO_list = [AO_list, lbt];
-        end
+
     end
     
     if any(strcmp('lbti', curve{ii}.throughput)) == 1 && exist('lbti','var') == 0
@@ -83,7 +83,8 @@ for ii = tracenum
     
     if curve{ii}.AO == 1 && exist('lbti_ao','var') == 0
         % make the l throughput
-        lbti_ao = Imager('LBTI_AO');
+        
+        lbti_ao = AO([aoType entWindow]);
         AO_list = [AO_list, lbti_ao];
                     
     end

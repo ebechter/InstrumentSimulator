@@ -86,27 +86,7 @@ classdef Imager < Instrument
                 pixelPitch = [];
                 detectorDimensions = [];
                 plateScale = [];
-                
-            elseif strcmp(type,'LBTI_AO') == 1
-                opticalModel{1} = struct('name','EntWindow','type','dichroic','coatingName','LBTI_ZnSeR','number',1,'angle',[],'efficiency',[]);
-                opticalModel{2} = struct('name','InternalOptics','type','single number','coatingName','WFS_Internal','number',1,'angle',[],'efficiency',[]); %0.9635^11
-                opticalModel{3} = struct('name','CCD39','type','detector','coatingName','CCD39','number',1,'angle',[],'efficiency',[]);
-                
-                bandPass = [600,1000];
-                pixelPitch = [];
-                detectorDimensions = [];
-                plateScale = [];
-                
-            elseif strcmp(type,'SOUL') == 1
-                opticalModel{1} = struct('name','Entrance Window','type','dichroic','coatingName','LBTI_ZnSeR','number',1,'angle',[],'efficiency',[]);
-                opticalModel{2} = struct('name','InternalOptics','type','single number','coatingName','WFS_Internal','number',1,'angle',[],'efficiency',[]); %0.9635^11
-                opticalModel{3} = struct('name','OCAM2K','type','detector','coatingName','OCAM2K','number',1,'angle',[],'efficiency',[]);
-                
-                bandPass = [600,900];
-                pixelPitch = [];
-                detectorDimensions = [];
-                plateScale = [];
-                
+                           
             elseif strcmp(type,'LBT') == 1
                 opticalModel{1} = struct('name','Primary','type','mirror','coatingName','LBT_PS_Al','number',1,'angle',[],'efficiency',[]);
                 opticalModel{2} = struct('name','Secondary','type','mirror','coatingName','LBT_T_Al','number',1,'angle',[],'efficiency',[]);

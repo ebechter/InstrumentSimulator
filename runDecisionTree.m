@@ -33,13 +33,15 @@ for ii = tracenum
             wfsCounts = sum(wfsSpec.*AOFlux);
             
             
+            strehlR = Simulation.calculateStrehlRatio(aoType,seeing,wfsCounts,zenith);
+            
         
         end                                                                                                                                                                                                                                                                                                                                                                       
         if isempty(curve{ii}.throughput) == 0  
             
             if exist('starThroughput','var') ==0 
             
-              starThroughput = Simulation.combineImagerThroughput(star_components);
+              [starThroughput,throughputProgression] = Simulation.combineImagerThroughput(star_components);
                 
               throughputGrid = Simulation.resampleToGrid(starThroughput(:,1)*1e-3,starThroughput(:,2),spectral_cell{ii}(:,1));
                 

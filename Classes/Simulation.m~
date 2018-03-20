@@ -13,7 +13,9 @@ classdef Simulation
                 obj.scale = scale;
             end
         end
-
+        
+        
+        
     end
     
     methods(Static)
@@ -70,9 +72,8 @@ classdef Simulation
             
         end
         
-        function [starThroughput,comTput] = combineImagerThroughput(star_components)
+        function [starThroughput] = combineImagerThroughput(star_components)
             comTput{1} = star_components(1).finalThroughput;
-   
             
             for ii = 2:size(star_components,2) %loop over cellarry size (i.e. surfaces)
                 [comTput{ii}(:,1),comTput{ii}(:,2)] = Instrument.multiply_curves...
@@ -379,12 +380,12 @@ classdef Simulation
         end
         
         
-        function [SR_interp] = calculateStrehlRatio(aoType,seeing,counts,zenith)
+        function [SR_interp] = calculateStrehlRatio(AO_type,seeing,counts,zenith)
             strehl_dir = pwd;
             refS=[0.6,0.8,1];
             [~,indmatch] = min(abs(refS-seeing));
             
-            if strcmp(aoType,'FLAO') == 1
+            if AO_type == 1
                 file = '/RefFiles/AO/FLAO_Strehl.csv';
                 refSeeing = 1;
             else
@@ -392,10 +393,10 @@ classdef Simulation
                     file = '/RefFiles/AO/SOUL_Strehl_06_vib.csv';
                     refSeeing = refS(indmatch);
                 elseif indmatch == 2
-                    file = '/RefFiles/AO/SOUL_Strehl_08_vib.csv';
+                    file = 'RefFiles/AO/SOUL_Strehl_08_vib.csv';
                     refSeeing = refS(indmatch);
                 elseif indmatch == 3
-                    file = '/RefFiles/AO/SOUL_Strehl_1_vib.csv';
+                    file = 'RefFiles/AO/SOUL_Strehl_1_vib.csv';
                     refSeeing = refS(indmatch);
                 end
             end
@@ -407,8 +408,10 @@ classdef Simulation
             %Description: Read in reference WFS file from LBT ao group
             
             delimiter = ',';
-            startRow = 2;
-            endRow = inf;
+                startRow = 2;
+                endRow = inf;
+
+            
             formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
             
             % Open the text file.
@@ -504,7 +507,7 @@ classdef Simulation
                 StrehlM = vqm(ind);
             end
             
-            if strcmp(aoType,'FLAO') == 1
+            if AO_type ==1
                 fs = [1000.1 1000.01 1000.001 1000.0001 200 100];
                 bin = [1.0001 1.001 2 4 4.0001 4.001 4.01];
             else

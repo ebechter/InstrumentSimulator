@@ -55,15 +55,15 @@ classdef FiberCoupling
                 obj.WFE = [0,0,0,0,0,0,0,0]; % Pupil Zernike amplitudes piston, xtilt, ytilt, etc...
                 rms_scale = [1,1/2,1/2,1/sqrt(3),1/sqrt(6),1/sqrt(6),1/sqrt(8),1/sqrt(8)];
                 obj.RMS = obj.WFE.*rms_scale;
-                obj.ADC = 0; %microns is max ADC dispersion (This is translated as an offset fiber pos rather than beam position for computational ease)
+                obj.ADC = 0; %Choose values from 0-60 in steps of 5 for the zenith angle.(This is translated as an offset fiber pos rather than beam position for computational ease)
                 obj.FiberPos = [0,0,0]; % global position offset in microns (x,y,z)
                 obj.DoF = 0; %Polychromatic depth of focus in microns
                 
             else
                 obj.WFE = wfe; % Pupil Zernike amplitudes piston, xtilt, ytilt, etc...
                 rms_scale = [1,1/2,1/2,1/sqrt(3),1/sqrt(6),1/sqrt(6),1/sqrt(8),1/sqrt(8)];
-%                 obj.RMS = obj.WFE.*rms_scale;                
-                obj.ADC = adc;%6/7; %microns is max ADC dispersion (This is translated as an offset fiber pos rather than beam position for computational ease)
+                obj.RMS = obj.WFE.*rms_scale;                
+                obj.ADC = adc; %Choose values from 0-60 in steps of 5 for the zenith angle.(This is translated as an offset fiber pos rather than beam position for computational ease)
                 obj.FiberPos = fiberpos; % global position offset in microns (x,y,z)
                 obj.DoF = dof; %Polychromatic depth of focus in microns
             end
@@ -71,7 +71,6 @@ classdef FiberCoupling
                 1.18452 1.17512 1.16587 1.15676 1.14779 1.13896 1.13027 1.12171 1.11327 1.10497 1.09678 1.08872 1.08077 ...
                 1.07294 1.06522 1.05761 1.05011 1.04271 1.03542 1.02823 1.02114 1.01415 1.00725 1.00044 9.9373E-001 ...
                 9.8710E-001 9.8057E-1 9.7411E-1]');
-%             obj.Wavelength = (1.064);
             
             obj = PrepareFiberOffsets(obj);
             obj = CreatePupilPlane(obj);
@@ -79,13 +78,17 @@ classdef FiberCoupling
             obj = CoupleSMF(obj);
         end
         function [obj] = PrepareFiberOffsets(obj)
-%             Offset = 1e-6*(linspace(-(obj.ADC),(obj.ADC),length(obj.Wavelength)));
+            %Description: uses ADC beam offsets in the focal plane from
+            %zemax to offset the fiber. Also calculates the MFD at each
+            %wavelength sample. 
+            
+            %Offset = 1e-6*(linspace(-(obj.ADC),(obj.ADC),length(obj.Wavelength)));
             %replace offset with ADC fitted curves. Use the obj.wavelength
-            %vector to evaluate the curves. 
-            global adcfile
-%             pathprefix = pwd;
-%             adcfile = [pathprefix '/RefFiles/ADC/ADC_coeff.mat'];
-            load(adcfile)
+            %vector to evaluate the curves.
+            pathprefix = pwd;
+            adcfile = [pathprefix '/RefFiles/ADC/ADC_coeff_radial.mat'];
+            %adcfile = [pathprefix '/RefFiles/ADC/ADC_coeff.mat'];
+            load(adcfile) %ADC beam offsets from 0-60 in steps of 5 for the zenith angle.
             ii = (obj.ADC./5)+1; %match the zenith angle to the index of polynomial fit coefficients in po
             x1 = obj.Wavelength;
             y1 = polyval(p0{ii},x1);
@@ -98,11 +101,18 @@ classdef FiberCoupling
             obj.BeamPos = Offset; % lateral offset of the fiber translates to phase in pupil plane
         end
         function [obj] = CreatePupilPlane(obj)
+            %Description: Calculates the pupil based on the telescope
+            %parameters with a phase term. Also calculates the pupil based
+            %on the focal length of the fiber lens pair by backwards
+            %propagating. The fiber position error (from not centering the
+            %stage, and ADC offsets are incorporated in fiber pupil plane. 
+            
             %Break out Zernike amplitues into seperate amplitudes
             Afx = obj.FiberPos(1,1);
             Afy = obj.FiberPos(1,2);
+            
             %Zernike phase map
-            W = 0;
+            W = 0; % 
             for z = 1:length(obj.WFE)
                 Z = ZernikeCalc(z,1); % use ZernikeCalc to produce normalized zernike surface
                 Z = padarray(Z,[400,400]);% increase padding on output;
@@ -111,7 +121,9 @@ classdef FiberCoupling
                 W = W+Ab;
             end
             
-            %Constants
+            %Constants (we should make this accept variables, or use
+            %defaults)
+            
             N = size(W,1);% variable 7/25/17 Sampling points
             L = 50e-3;% length of grid in meters
             dl = L/N; %Pupil plane grid spacing (meters)
@@ -119,13 +131,11 @@ classdef FiberCoupling
                
             k = 2*pi./(1e-6*obj.Wavelength); %wavenumber
             alpha = 0.11; % secondary blocking fraction
-            f = 24.5e-3;%focal length of lens
-%             f = 20.8e-3;
+            f = 24.5e-3;% (20.8e-3) focal length of lens 
             d = f; %distance before the lens
             obj.gridparams = [dl,f,d];
-            
+            .....................
             %Pupil definition
-              
             [x1,y1] = meshgrid((-N/2+0.5:N/2-0.5)*dl); %grid in pupil plane
             obj.PPgrid(:,:,1) = x1;
             obj.PPgrid(:,:,2) = y1;
