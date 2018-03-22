@@ -3,18 +3,18 @@
 clear; clc
 addpath(genpath(pwd))
 parflag = true;
-scale = 1;
+scale = 3;
 load polycoeffs2
 load chebycoeffs2
-nOrders = 2;
+nOrders = 10;
 cheby=0;
-aoType = 'FLAO'; % 'FLAO' or 'SOUL'
-entWindow = []; %'ilocater' (ECI) or  empty for default lbti []
-zenith = 0*(pi/180); %rad
-seeing = 0.6; %arcsec
+aoType = 'SOUL'; % 'FLAO' or 'SOUL'
+entWindow = 'ilocater'; %'ilocater' (ECI) or  empty for default lbti []
+zenith = 45*(pi/180); %rad
+seeing = 1.1; %arcsec
 curve{1}.source = 'star';
 curve{1}.atmosphere = 1;
-curve{1}.throughput = {'lbt','lbti','fiber','spectrograph'};
+curve{1}.throughput = {'lbt','lbti','fiberCh','fiberLink','spectrograph'};
 curve{1}.AO = 1;
 
 curve{2}.source = 'etalon';
@@ -75,7 +75,7 @@ for ii = tracenum
         star_components = [star_components, lbti];
     end
     
-    if any(strcmp('fiber', curve{ii}.throughput)) == 1 && exist('fiber','var') == 0
+    if any(strcmp('fiberCh', curve{ii}.throughput)) == 1 && exist('fiberCh','var') == 0
         % make the l throughput
         fiber = Imager('FIBER');
         star_components = [star_components, fiber];
@@ -83,11 +83,10 @@ for ii = tracenum
     
     if curve{ii}.AO == 1 && exist('lbti_ao','var') == 0
         % make the l throughput
-        
         lbti_ao = AO([aoType entWindow]);
         AO_list = [AO_list, lbti_ao];
                     
-    end
+    end  
     
 end
 

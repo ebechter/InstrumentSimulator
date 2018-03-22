@@ -31,12 +31,10 @@ for ii = tracenum
             % compute counts on wfs. 
             AOFlux = Simulation.resampleToGrid(AO_throughput(:,1)*1e-3,AO_throughput(:,2),wfsWave);
             wfsCounts = sum(wfsSpec.*AOFlux);
-            
-            
             strehlR = Simulation.calculateStrehlRatio(aoType,seeing,wfsCounts,zenith);
             
+        end
         
-        end                                                                                                                                                                                                                                                                                                                                                                       
         if isempty(curve{ii}.throughput) == 0  
             
             if exist('starThroughput','var') ==0 
@@ -51,6 +49,35 @@ for ii = tracenum
             
         end
     
+        if any(strcmp('fiberLink', curve{ii}.throughput)) == 1
+             
+            strehl = strehlR; strehlR(:,1) = strehlR(:,1)*1000;% need to work in nm for fiber coupling
+            wfe = [0,0,0,0,0,0,0,0]; % complicated input (user can specify wave front error)
+            adc = 0; % zenith angle for ads 0-60 in steps of 5
+            fiberpos = [0,0,0]; % global position offset in microns (x,y,z)
+            dof = 0; % depth of focus (not sure if used yet)
+            bandPass = 965:1305; % typical bandpass for fiber coupling
+            smfLink = FiberLink(wfe,adc,fiberpos,dof,strehlR,bandPass);
+            
+            % indlcue all fiber coupling losses (Strehl ratio, mismatch,
+            % adc, fiber offsets etc) specLink is for spectrograph path
+            
+            %multiply the star by fiber throughput
+            throughputGrid = Simulation.resampleToGrid(smfLink.specLink(:,1)*1e-3,smfLink.specLink(:,2),spectral_cell{ii}(:,1));
+            spectral_cell{ii}(:,2) = spectral_cell{ii}(:,2).*throughputGrid;
+            
+            %record throughput progression
+            new_y = Simulation.resampleToGrid(smfLink.specLink(:,1),smfLink.specLink(:,2),tputProg{1,end}(:,1));
+            tempTput(:,1) = tputProg{1,end}(:,1);
+            tempTput(:,2) = new_y .* tputProg{1,end}(:,2);
+            
+            %[tempTput] = Simulation.addSpecThroughput(,spectrograph.finalThroughput,nOrders);
+            smfCell{1} = tempTput;
+            smfCell{2,1} = smfLink.name;
+            tputProg = [tputProg smfCell];
+            clear specCell tempTput new_y
+            
+        end
         
         
         % cross disperse spectrum into nOrders orders, trim down wavelengths  
@@ -58,7 +85,7 @@ for ii = tracenum
         
         if any(strcmp('spectrograph', curve{ii}.throughput)) == 1
             
-            % combine throughput of spectrograph.
+            % include throughput of spectrograph.
             
             spectral_cell{ii} = Simulation.addSpecThroughput(spectral_cell{ii},spectrograph.finalThroughput,nOrders);
             
@@ -72,7 +99,7 @@ for ii = tracenum
             specCell{1} = tempTput;
             specCell{2,1} = spectrograph.name;
             tputProg = [tputProg specCell];
-            clear specCell tempTput
+            clear specCell tempTput new_y
             
         end
         
