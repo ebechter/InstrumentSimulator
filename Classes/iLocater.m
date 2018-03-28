@@ -26,8 +26,7 @@ classdef iLocater < Instrument
             obj = R6Grating(obj);
             obj = iLocFiberLink(obj,coupling,wavelength); % calculates fiber coupling
             obj.StrehlRatio = ones(length(obj.FullBand),1);
-            
-            
+                        
             %Propogate starlight through the Instrument
             obj.PathName = StarlightPath; %Name of optical path (user input at top)
            

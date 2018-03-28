@@ -1,6 +1,8 @@
 classdef Simulation
     properties
         scale
+        totalCounts
+        totalEnergy
         
     end
     

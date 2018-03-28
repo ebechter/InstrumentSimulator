@@ -2,20 +2,24 @@
 % clear up the workspace
 clear; clc
 addpath(genpath(pwd))
-parflag = true;
-scale = 3;
+parflag = false;
+scale = 1;
 load polycoeffs2
 load chebycoeffs2
 nOrders = 10;
 cheby=0;
 aoType = 'SOUL'; % 'FLAO' or 'SOUL'
 entWindow = 'ilocater'; %'ilocater' (ECI) or  empty for default lbti []
-zenith = 45*(pi/180); %rad
+zenith = 10*(pi/180); %rad
 seeing = 1.1; %arcsec
+
+SpecOrImager = 'Imager' ;
+
 curve{1}.source = 'star';
 curve{1}.atmosphere = 1;
 curve{1}.throughput = {'lbt','lbti','fiberCh','fiberLink','spectrograph'};
 curve{1}.AO = 1;
+
 
 curve{2}.source = 'etalon';
 curve{2}.atmosphere = 0;
@@ -25,7 +29,13 @@ curve{2}.AO = 0;
 curve{3} = curve{1};
 
 %========== Instanciate objects ===========%
-tracenum = 1;%[1,2,3];
+tracenum = [1,2,3];
+
+if strcmp(SpecOrImager,'Imager')
+    tracenum = 1;
+    curve{1}.throughput = {'lbt','lbti','fiberCh'};
+end
+
 for ii = tracenum
     
     %========== Source Options ===========%
@@ -36,7 +46,7 @@ for ii = tracenum
         
     elseif strcmp('star', curve{ii}.source) == 1 && exist('star','var') == 0
         % make a star
-        star = Star('M0V',11.8,1,2,0,'counts');
+        star = Star('M0V',13.8,1,2,0,'counts');
         
     elseif strcmp('flat', curve{ii}.source) == 1 && exist('flat','var') == 0
         % make a flat spectrum
@@ -66,7 +76,7 @@ for ii = tracenum
         % make the lbt throughput
         lbt = Imager('LBT');
         star_components = [star_components, lbt];
-
+        
     end
     
     if any(strcmp('lbti', curve{ii}.throughput)) == 1 && exist('lbti','var') == 0
@@ -85,23 +95,40 @@ for ii = tracenum
         % make the l throughput
         lbti_ao = AO([aoType entWindow]);
         AO_list = [AO_list, lbti_ao];
-                    
-    end  
+        
+    end
     
 end
 
-simulation = Simulation(scale); 
+simulation = Simulation(scale);
 spectral_cell = cell(3,1);
 
 
-% this decides how to combine throughput terms with sources and atmospheres for each of the traces. 
+% this decides how to combine throughput terms with sources and atmospheres for each of the traces.
+
 runDecisionTree()
+
+if strcmp(SpecOrImager,'Imager') == 1
+    % doImagerThings
+    Bandpass = [0.970,1.310]; % hard cutoff for bandpass
+    [trimWave,trimCounts] = Simulation.trimToBand(spectral_cell{1}(:,1),spectral_cell{1}(:,2),Bandpass);
+    simulation.totalCounts = sum(trimCounts);
+    simulation.totalEnergy = Spectra.counts2Energy(trimWave,trimCounts);
+    simulation.totalEnergy = sum(simulation.totalEnergy);
+    
+    total = (max(Bandpass(1,:)*1000)-min(Bandpass(1,:))*1000);
+    IntTrans = trapz(tputProg{1,3}(:,1),tputProg{1,3}(:,2))/total;
+    
+    clear nOrders ii order_coeff ret scale cheby chebs tracenum wave_coeff p1 parflag SpecOrImager total spectral_cell
+    
+   return
+end
 
 % At this point you have a spectral_cell of {trace}{order}(wavelength,counts)
 
-% Now convolve each spectral order and clip on detector in parallel or serial. 
+% Now convolve each spectral order and clip on detector in parallel or serial.
 for jj = tracenum
-
+    
     fprintf('\nStarting trace %i \n',jj)
     if parflag == true
         parallel_scale = simulation.scale;
@@ -126,7 +153,7 @@ for jj = tracenum
             [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(spectral_cell{jj}{1}(:,ii),spectral_cell{jj}{2}(:,ii),wave_coeff(ii,:,jj),simulation.scale);
             Detector(:,:,ii,jj) = Simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
             fprintf('%s \n',char(hex2dec('2713')))
-
+            
         end
     end
     
@@ -147,14 +174,13 @@ end
 
 
 
+% Fiber throughput and AO correction go into combine Imager curves.
 
-% Fiber throughput and AO correction go into combine Imager curves.  
+% Then include the spectrograph orders and throughput.
 
-% Then include the spectrograph orders and throughput. 
+% Derive wavelength solution map or load saved map.
 
-% Derive wavelength solution map or load saved map. 
-
-% Convolve and Clip loop. 
+% Convolve and Clip loop.
 
 
 
