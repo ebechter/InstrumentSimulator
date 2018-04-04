@@ -90,6 +90,7 @@ classdef Star < Spectra
             %I_J = (I_mag-mj);
             
             %Display some data
+            fprintf('Stellar params\n')
             disp(['Vmag=',num2str([obj.vmag]),', Rmag=',num2str(R_mag),' Imag=',num2str(I_mag),...
                 ' Jmag=',num2str(mj),' Stellar type= ', [obj.spType]])
             disp('-----')

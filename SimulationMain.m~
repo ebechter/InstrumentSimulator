@@ -7,12 +7,11 @@ loadParams
 
 poolobj = gcp('nocreate');
 
-if parflag
-    usep = 'yes';
+if parflag  
     if isempty(poolobj)
         %no pool exists and I want one
         parpool(numworkers);
-        
+        usep = 'yes';
     else
         %just run it b/c a pool already exists
     end
@@ -23,11 +22,11 @@ end
 
 
 
-fprintf('-----\n%s simulation\nversion: %s\nfootprint: %s\nupscale factor: %i\n-----\nparallel settings\nParallel: %s\nnum. of cores: %i\n-----\n'...
+fprintf('%s simulation\nversion: %s\nfootprint: %s\nupscale factor: %i\n-----\nparallel settings\nParallel: %s\nnum. of cores: %i\n-----\n'...
         ,SpecOrImager, version, footprint, scale, usep, numworkers)
 
 %========== Instanciate objects ===========%
-fprintf('creating simulation objects...\n')
+fprintf('creating simulation objects... \n-----\n')
 
 if strcmp(SpecOrImager,'Spectrograph') ==1
     curve{1}.source = 'star';
@@ -161,8 +160,7 @@ for ii = tracenum
         spectral_cell{ii}(:,2) = Star.fluxDenToflux(spectral_cell{ii}(:,1),spectral_cell{ii}(:,2));
         
         if curve{ii}.AO == 1
-            fprintf('calculating strehl ratio...')
-
+            
             % if we want ao, first check if its already been made
             if exist('AO_throughput','var') == 0
                 
@@ -177,9 +175,9 @@ for ii = tracenum
             AOFlux = Simulation.resampleToGrid(AO_throughput(:,1)*1e-3,AO_throughput(:,2),wfsWave);
             wfsCounts = sum(wfsSpec.*AOFlux);
             
+            fprintf('calculating strehl ratio...\n')
             strehlR = Simulation.calculateStrehlRatio(aoType,seeing,wfsCounts,zenith);
-            fprintf('%s \n',char(hex2dec('2713')))
-
+            
         end
         
         if isempty(curve{ii}.throughput) == 0
@@ -199,7 +197,7 @@ for ii = tracenum
         
         if any(strcmp('fiberLink', curve{ii}.throughput)) == 1
             
-            fprintf('calculating fiber coupling...')
+            fprintf('calculating fiber coupling...\n')
 
             
             strehl = strehlR; strehlR(:,1) = strehlR(:,1)*1000;% need to work in nm for fiber coupling
@@ -312,17 +310,17 @@ end
 
 % Now convolve each spectral order and clip on detector in parallel or serial.
 
-fprintf('-----\nclipping spectrum to detector...\n')
+fprintf('-----\nbeginning psf convolution and detector clipping\n-----\n')
 for jj = tracenum
     
-    fprintf('trace %i \n',jj)
+    fprintf('starting trace %i \n',jj)
     if parflag == true
         parallel_scale = simulation.scale;
         parallel_cell = spectral_cell{jj};
         
         parfor ii = 1:nOrders
             
-            fprintf('working on order %i... ',ii)
+            fprintf('computing order %i... ',ii)
             
             [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(parallel_cell{1}(:,ii),parallel_cell{2}(:,ii),wave_coeff(ii,:,jj),parallel_scale);
             Detector(:,:,ii,jj) = Simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
@@ -334,7 +332,7 @@ for jj = tracenum
     else
         for ii = 1:nOrders
             
-            fprintf('working on order %i... ',ii)
+            fprintf('computing order %i... ',ii)
             
             [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(spectral_cell{jj}{1}(:,ii),spectral_cell{jj}{2}(:,ii),wave_coeff(ii,:,jj),simulation.scale);
             Detector(:,:,ii,jj) = Simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
@@ -350,7 +348,7 @@ fprintf('-----\n')
 
 DetectorFace = sum(sum(Detector,4),3);
 
-fprintf('writing detector face to a fits file...')
-Simulation.WriteFits(fitsname,DetectorFace,headerinfo)
+fprintf('-----\n writing detector face to a fits file...')
+Simulation.WriteFits(fitsname,Target.DetectorFace,headerinfo)
 fprintf('%s \n',char(hex2dec('2713')))
 

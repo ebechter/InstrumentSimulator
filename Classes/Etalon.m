@@ -6,7 +6,7 @@ classdef Etalon < Spectra
         finesse    % calculated from R1 and R2.
         length     % cavity length in meters - calculated from FSR
         type       % default, ref, or fullref 
-        %
+        
         wavecenters % vector of peak wavelengths in angstroms. Calculated by maximizing intensity function  
         refpeak
         %         FSR_measured
@@ -14,7 +14,7 @@ classdef Etalon < Spectra
     end
     
     methods
-        function [obj] = Etalon(FSR, R1, R2, scale, rv, type)
+        function [obj] = Etalon(scale,FSR, R1, R2, rv, type)
             %% Pre Initialization %%
             % Any code not using output argument (obj)
             if nargin == 0
@@ -23,6 +23,14 @@ classdef Etalon < Spectra
                 R1 = 0.93;
                 R2 = 0.93;
                 scale = 3;
+                rv = 0;
+                type = 'default';
+            
+                
+            elseif nargin == 1
+                FSR = 10;
+                R1 = 0.93;
+                R2 = 0.93;
                 rv = 0;
                 type = 'default';
                 
@@ -153,7 +161,7 @@ classdef Etalon < Spectra
             
             
             %-----Assign values to Etalon object-----%
-            obj.wavelength(:,1) = lambda*1e10; % Angstroms
+            obj.wavelength(:,1) = lambda*1e6; % microns
             obj.counts(:,1) = I; % BS scale factor
             
             obj.refpeak = cent;

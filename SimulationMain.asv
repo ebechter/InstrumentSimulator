@@ -15,25 +15,31 @@ seeing = 1.1; %arcsec
 
 SpecOrImager = 'Imager' ;
 
-curve{1}.source = 'star';
-curve{1}.atmosphere = 1;
-curve{1}.throughput = {'lbt','lbti','fiberCh','fiberLink','spectrograph'};
-curve{1}.AO = 1;
-
-
-curve{2}.source = 'etalon';
-curve{2}.atmosphere = 0;
-curve{2}.throughput = {'calibration','spectrograph'};
-curve{2}.AO = 0;
-
-curve{3} = curve{1};
-
 %========== Instanciate objects ===========%
-tracenum = [1,2,3];
 
-if strcmp(SpecOrImager,'Imager')
+if strcmp(SpecOrImager,'Spectrograph') ==1
+    curve{1}.source = 'spectrograph';
+    curve{1}.atmosphere = 1;
+    curve{1}.throughput = {'lbt','lbti','fiberCh','fiberLink','spectrograph'};
+    curve{1}.AO = 1;
+    
+    curve{2}.source = 'etalon';
+    curve{2}.atmosphere = 0;
+    curve{2}.throughput = {'calibration','spectrograph'};
+    curve{2}.AO = 0;
+    
+    curve{3} = curve{1};
+    
+    tracenum = [1,2,3];
+
+elseif strcmp(SpecOrImager,'Imager') == 1
+    
+    % curve{1}.throughput = {'lbt','lbti','fiberCh'};
+    curve{1}.source = 'cal';
+    curve{1}.atmosphere = 0;
+    curve{1}.throughput = {'filter'};
+    curve{1}.AO = 0;
     tracenum = 1;
-    curve{1}.throughput = {'lbt','lbti','fiberCh'};
 end
 
 for ii = tracenum
@@ -51,6 +57,9 @@ for ii = tracenum
     elseif strcmp('flat', curve{ii}.source) == 1 && exist('flat','var') == 0
         % make a flat spectrum
         flat = Flat();
+    
+    elseif strcmp('cal', curve{ii}.source) == 1 && exist('SuperK','var') == 0
+        WLS = SuperK();
     end
     
     %========== Atmosphere Options ===========%
@@ -98,6 +107,13 @@ for ii = tracenum
         
     end
     
+    if any(strcmp('filter', curve{ii}.throughput)) == 1 && exist('filter','var') == 0
+        % make the lbt throughput
+        filter = Imager('Filter');
+        star_components = [star_components, filter];
+        
+    end
+    
 end
 
 simulation = Simulation(scale);
@@ -110,14 +126,15 @@ runDecisionTree()
 
 if strcmp(SpecOrImager,'Imager') == 1
     % doImagerThings
-    Bandpass = [0.970,1.310]; % hard cutoff for bandpass
+    Bandpass = [0.800,1.800]; % hard cutoff for bandpass
     [trimWave,trimCounts] = Simulation.trimToBand(spectral_cell{1}(:,1),spectral_cell{1}(:,2),Bandpass);
-    simulation.totalCounts = sum(trimCounts);
-    simulation.totalEnergy = Spectra.counts2Energy(trimWave,trimCounts);
-    simulation.totalEnergy = sum(simulation.totalEnergy);
-    
-    total = (max(Bandpass(1,:)*1000)-min(Bandpass(1,:))*1000);
-    IntTrans = trapz(tputProg{1,3}(:,1),tputProg{1,3}(:,2))/total;
+%     simulation.totalCounts = sum(trimCounts);
+%     simulation.totalEnergy = Spectra.counts2Energy(trimWave,trimCounts);
+%     simulation.totalEnergy = sum(simulation.totalEnergy);   
+%     total = (max(Bandpass(1,:)*1000)-min(Bandpass(1,:))*1000);
+%     IntTrans = trapz(tputProg{1,3}(:,1),tputProg{1,3}(:,2))/total;
+
+
     
     clear nOrders ii order_coeff ret scale cheby chebs tracenum wave_coeff p1 parflag SpecOrImager total spectral_cell
     

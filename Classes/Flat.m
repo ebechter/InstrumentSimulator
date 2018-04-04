@@ -11,11 +11,13 @@ classdef Flat < Spectra
             if nargin == 0
                 % Provide values for superclass constructor
                 % and initialize other inputs
+                obj.scale = 1;
             else
+                obj.scale = scale;
                 % need to put conditions for user specified inputs here
             end
             
-            obj = LoadFlat(obj,scale);
+            obj = LoadFlat(obj,obj.scale);
             
         end%constructor
         function [obj] = LoadFlat(obj,scale)
@@ -25,8 +27,8 @@ classdef Flat < Spectra
             dlam = 1/R/pix_samp; % average delta lambda per order with 180000 and 3.5 pixel samp.
             step=(dlam/scale);
             
-            obj.Wavelength = (0.2: step :1.5)' ; % microns
-            obj.Counts = 5e3*ones(size(obj.Wavelength)) ; % BS scale factor
+            obj.wavelength = (0.2: step :1.5)' ; % microns
+            obj.counts = 5e3*ones(size(obj.wavelength)) ; % BS scale factor
             
         end%generate standard flat
     end

@@ -7,9 +7,9 @@ for ii = tracenum
                 star.wavelength,star.spectrum,star.rv);
             
         elseif strcmp(SpecOrImager,'Imager') == 1
-            spectral_cell{ii}(:,1) = star.wavelength;
-            spectral_cell{ii}(:,2) = Star.energy2Counts(star.wavelength,star.spectrum);
             
+                spectral_cell{ii}(:,1) = star.wavelength;
+                spectral_cell{ii}(:,2) = Star.energy2Counts(star.wavelength,star.spectrum);
         end
         
         if curve{ii}.atmosphere == 1
@@ -37,6 +37,8 @@ for ii = tracenum
             % compute counts on wfs.
             AOFlux = Simulation.resampleToGrid(AO_throughput(:,1)*1e-3,AO_throughput(:,2),wfsWave);
             wfsCounts = sum(wfsSpec.*AOFlux);
+            
+            
             strehlR = Simulation.calculateStrehlRatio(aoType,seeing,wfsCounts,zenith);
             
         end
@@ -57,6 +59,9 @@ for ii = tracenum
         
         
         if any(strcmp('fiberLink', curve{ii}.throughput)) == 1
+            
+            fprintf('Calculating fiber coupling...\n')
+
             
             strehl = strehlR; strehlR(:,1) = strehlR(:,1)*1000;% need to work in nm for fiber coupling
             wfe = [0,0,0,0,0,0,0,0]; % complicated input (user can specify wave front error)
@@ -92,6 +97,39 @@ for ii = tracenum
             return
         end
         
+    elseif strcmp(curve{ii}.source,'etalon')
+
+        spectral_cell{ii} = [etalon.wavelength etalon.counts];
+        tputProg{1,1} = [etalon.wavelength*1e3,ones(size(etalon.counts))];
+        tputProg{2,1} = 'EtalonOnes';
+    
+    elseif strcmp(curve{ii}.source,'flat')
+        
+        
+        spectral_cell{ii} = [flat.wavelength flat.counts];
+        tputProg{1,1} = [flat.wavelength*1e3,ones(size(flat.counts))];
+        tputProg{2,1} = 'FlatOnes';
+        
+    elseif strcmp('cal', curve{ii}.source) == 1
+        
+        spectral_cell{ii}(:,1) = WLS.wavelength;
+        spectral_cell{ii}(:,2) = WLS.spectrum;
+        
+        if isempty(curve{ii}.throughput) == 0
+            
+            if exist('starThroughput','var') ==0
+                [Throughput,tputProg] = Simulation.combineImagerThroughput(star_components);
+                throughputGrid = Simulation.resampleToGrid(Throughput(:,1)*1e-3,Throughput(:,2),spectral_cell{ii}(:,1));
+                spectral_cell{ii}(:,2) = spectral_cell{ii}(:,2).*throughputGrid;
+                
+            end
+            
+        end
+        
+       
+    end
+   
+        
         % cross disperse spectrum into nOrders orders, trim down wavelengths
         spectral_cell{ii} = Simulation.Xdisperse(spectral_cell{ii},nOrders,wave_coeff);
         
@@ -101,40 +139,18 @@ for ii = tracenum
             
             spectral_cell{ii} = Simulation.addSpecThroughput(spectral_cell{ii},spectrograph.finalThroughput,nOrders);
             
-            for ii = 1:nOrders
-                new_y = Simulation.resampleToGrid(spectrograph.finalThroughput{2}(:,ii),spectrograph.finalThroughput{1}(:,ii),tputProg{1,end}(:,1));
-                tempTput{1}(:,ii) = tputProg{1,end}(:,1);
-                tempTput{2}(:,ii) = new_y .* tputProg{1,end}(:,2);
+            for nn = 1:nOrders
+                new_y = Simulation.resampleToGrid(spectrograph.finalThroughput{2}(:,nn),spectrograph.finalThroughput{1}(:,nn),tputProg{1,end}(:,1));
+                tempTput{1}(:,nn) = tputProg{1,end}(:,1);
+                tempTput{2}(:,nn) = new_y .* tputProg{1,end}(:,2);
             end
             
             %[tempTput] = Simulation.addSpecThroughput(,spectrograph.finalThroughput,nOrders);
             specCell{1} = tempTput;
             specCell{2,1} = spectrograph.name;
             tputProg = [tputProg specCell];
-            clear specCell tempTput new_y
+            clear specCell tempTput new_y tputProg
             
         end
+end  
         
-        
-        
-        
-    elseif strcmp(curve{ii}.source,'etalon')
-        %
-        %         if throughput
-        %
-        %             combine them
-        %         end
-        spectral_cell{ii} = spectral_cell{1};
-        
-        %
-    elseif strcmp(curve{ii}.source,'flat')
-        
-        
-        spectral_cell{ii} = spectral_cell{1};
-        %         if throughput
-        %             combine them
-        %         end
-        %     end
-    end
-    %
-end

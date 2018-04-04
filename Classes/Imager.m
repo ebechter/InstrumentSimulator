@@ -119,6 +119,15 @@ classdef Imager < Instrument
                 plateScale = [];
                 name = 'LBTI';
                 
+            elseif strcmp(type,'Filter') == 1
+                opticalModel{1} = struct('name','Filter','type','bandpass','coatingName','FB1330_12','number',1,'angle',[],'efficiency',[]);
+                bandPass = [600,1500];
+                pixelPitch = [];
+                detectorDimensions = [];
+                plateScale = [];
+                name = 'Filter';
+                
+                
             end
             curveDirectory = [pwd '/RefFiles/Curves/Instrument/'];
             obj.bandPass = bandPass;

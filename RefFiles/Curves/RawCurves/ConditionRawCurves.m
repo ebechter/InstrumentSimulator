@@ -1,5 +1,18 @@
 % clear 
 % close 
+
+%Thorlabs curves
+[output]= importThorlabsData('FB1330-12.xlsx');
+e = size(output,1);
+FB1330_12(:,1) = flipud(output(2:e-2,3));
+FB1330_12(:,2) = flipud(output(2:e-2,4)./100);
+
+save('FB1330_12.mat','FB1330_12')
+
+return
+
+% clear 
+% close 
 % 
 % %Entrance window from ECI
 % filename = 'EntWindowTrans.mat';
