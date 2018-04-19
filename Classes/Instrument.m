@@ -44,8 +44,7 @@ classdef Instrument
             end
             obj.finalThroughput(:,1) = xtrim;
             obj.finalThroughput(:,2) = ytrim;
-        end
-        
+        end  
         function [] = progressPlot(obj)
             handle =[];
             
@@ -84,8 +83,7 @@ classdef Instrument
             l.Box = 'off';
             box on
             
-        end
-        
+        end        
         function[obj] = intThroughput(obj)
             total = (max(obj.bandPass(1,:))-min(obj.bandPass(1,:)));
             obj.intTrans= trapz(obj.finalThroughput(:,1),obj.finalThroughput(:,2))/total;

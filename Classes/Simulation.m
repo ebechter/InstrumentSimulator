@@ -20,7 +20,7 @@ classdef Simulation
     
     methods(Static)
         
-        function [sampledstar] = addStar(R,pixSamp,scale,wavelength,counts,rv)
+        function [sampledstar] = addStar(R,pixSamp,scale,wavelength,spectrum,rv)
             
             
             % Define wavelength step (input in microns, output in microns) using maximum resolving power (R),
@@ -28,7 +28,7 @@ classdef Simulation
             dlam = 1/R/pixSamp;
             step = dlam/scale;
             interplambda = wavelength(1):step:wavelength(end);
-            interpflux = interp1(wavelength, counts, interplambda,'linear');
+            interpflux = interp1(wavelength, spectrum, interplambda,'linear');
             
             dsWavelength = Star.dopplerShift(interplambda,rv); %Shift Wavelength and assign DsWavelength
             counts = Star.energy2Counts(dsWavelength,interpflux);
@@ -166,7 +166,66 @@ classdef Simulation
             
         end
         
-        function [trim, wavelength] = ConvolveOrder(wavelength,spectrum,wave_coeff,scale)
+        function [APSF,FPgridx,FPgridy] = makeAbPsf(wfe,wavelength,pixSamp,scale)
+          
+            % wavelength = 1;% microns
+            % wfe = [0,0,0,0,0,0,0,0];
+            
+            %Zernike phase map
+            W = 0; %
+            for z = 1:length(wfe)
+                Z = ZernikeCalc(z,1,scale*17); % use ZernikeCalc to produce normalized zernike surface
+                %     Z = padarray(Z,[400,400]);% increase padding on output;
+                Z = Z./(max(max(Z)));
+                Ab = wfe(z)*Z;
+                W = W+Ab;
+            end
+            
+            %Constants (we should make this accept variables, or use
+            %defaults)
+            N = size(W,1);% variable 7/25/17 Sampling points
+            L = 50e-3;% length of grid in meters
+            dl = L/N; %Pupil plane grid spacing (meters)
+            beamD = (3/pixSamp(1))*(1/scale)*20e-3*(0.883);
+            beamDy =(3/pixSamp(2))*(1/scale)*20e-3*(0.883);
+            D = 1.75*beamD;%5.8e-3; % Pupil diameter
+            
+            k = 2*pi./(1e-6*wavelength); %wavenumber
+            alpha = 0.11; % secondary blocking fraction
+            f = 1.33*440e-3;%24.5e-3;% (20.8e-3) focal length of lens
+            d = f; %distance before the lens
+            
+            %Pupil definition
+            [x1,y1] = meshgrid((-N/2+0.5:N/2-0.5)*dl); %grid in pupil plane
+            PPgrid(:,:,1) = x1;
+            PPgrid(:,:,2) = y1;
+            
+            
+            PupilOffset = 0; %1mm offset
+            Pupil_cenx = x1 + PupilOffset;
+            Pupil_ceny = y1 + PupilOffset;
+            Uin1 = circ(Pupil_cenx,Pupil_ceny,D);%outer circle
+            % Uin2 = circ(Pupil_cenx,Pupil_ceny,D*alpha);%inner circle
+            % pupil = Uin1-Uin2;%total pupil plance image
+            
+            [gauss]=circ_gauss(Pupil_cenx,Pupil_ceny,[beamD/4,beamDy/4],[0,0]);
+            gauss = gauss./(max(max(gauss)));
+            pupil = Uin1.*gauss;
+            
+            % W =pupil.*W;
+            Pupil = pupil.*exp(1i*W); %Complex Pupil plane with phase term
+            
+            %Propogate the pupil plane to focal plane (electric fields) at
+            %all wavelengths
+            [x2,y2,PSF] = lens_in_front_ft(Pupil,1e-6*wavelength,dl,f,d);
+            FPgridx = x2;
+            FPgridy = y2;
+            
+            APSF = abs(PSF).^2;
+            APSF = APSF./(sum(sum(APSF)));
+        end
+
+        function [trim, wavelength] = ConvolveOrder(wavelength,spectrum,wave_coeff,wfe,scale)
             
             % trim each order beyond the edge of the detector
             
@@ -179,24 +238,34 @@ classdef Simulation
             % sampled at the high end. 3 pixels at red, smooth function to
             % 6 pixels at blue.
             
-            pix_samp = linspace(6,3,length(wavelength));
+            horSamp = linspace(6,3,length(wavelength));
             
-            vert_samp = median(pix_samp);
-            pix_samp = 0.8*pix_samp;
+            vertSamp = median(horSamp);
+            horSamp = 0.8*horSamp;
             % Custom convolution
             
             % Do the first loop iteration outside the loop. Need to
             % calculate dim first
             ii = 1;
             
-            [PSF,center] = Simulation.MakePSF(scale,pix_samp(ii),vert_samp);
+            % Determine wfe to use. scale it off of wavelength...horSamp(ii) vertSamp 
+            wfeList{ii} = wfe*(wavelength(ii)/0.97);
+            [PSF,FPgridx,FPgridy] = Simulation.makeAbPsf(wfeList{ii},wavelength(ii),[3 3],scale);
+            center = [round(size(FPgridx,2)/2),round(size(FPgridy,1)/2)];
+
+            
+            % No aberrations
+%             [PSF,center] = Simulation.MakePSF(scale,horSamp(ii),vertSamp);
             dim = size(PSF,1);
             rectangle = zeros(dim,length(wavelength)+dim-1);
             rectangle(:,ii:dim-1+ii)=rectangle(:,ii:dim-1+ii)+PSF.*spectrum(ii);
             
             for ii = 2:length(wavelength)
-                
-                [PSF,~] = Simulation.MakePSF(scale,pix_samp(ii),vert_samp);
+
+                wfeList{ii} = wfe*(wavelength(ii)/0.97);
+                [PSF,~,~] = Simulation.makeAbPsf(wfeList{ii},wavelength(ii),[horSamp(ii) vertSamp],scale);
+
+%                 [PSF,~] = Simulation.MakePSF(scale,horSamp(ii),vertSamp);
                 
                 %                 Conv1 = conv2(spectrum(ii),PSF,'full');
                 
@@ -631,6 +700,26 @@ classdef Simulation
             ax.LineWidth = 1.5;
         end
         
+        function [frame] = simulateImager(psf,dimensions,pixelpitch,totalCounts)
+            
+            %create the frame based on detector specs
+            rows = dimensions(1);
+            columns = dimensions(2);
+            [MatX,MatY]=meshgrid(1:columns,1:rows); % make the mesh grid
+            
+            %PSF parameters (gaussian for now)
+            sigmax = psf./2.355./pixelpitch; %sigma in pixel units 
+            sigmay = sigmax;
+            center(1) = round(rows/2);
+            center(2) = round(columns/2);
+            
+            %noiseless frame
+            PSF=circ_gauss(MatX,MatY,[sigmax,sigmay],center);
+            
+            %convolve
+            frame = conv2(PSF,totalCounts);
+            
+        end
         
         
     end

@@ -7,27 +7,30 @@ classdef Spectrograph < Instrument
     end
     
     methods
-        function [obj] = Spectrograph(bandPass, polarization, opticalModel,maxR,pixSamp)
+        function [obj] = Spectrograph(polarization)
             %% Pre Initialization %%
             % Any code not using output argument (obj)
-            if nargin == 0
-                %Need to define an optical model structure and rules.
-                %Primary grating needs to be at the end
-                opticalModel{1} = struct('name','OffnerM1','type','fold','coatingName','FathomGold','number',2,'angle','10','efficiency',[]);
-                opticalModel{2} = struct('name','OffnerM2','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-                opticalModel{3} = struct('name','FoldM1','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-                opticalModel{4} = struct('name','M2','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-                opticalModel{5} = struct('name','M3','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-                opticalModel{6} = struct('name','R6Grating','type','Grating','coatingName','R6Grating','number',1,'angle','88','efficiency',[]);
-                bandPass = [970,1270];
-                polarization = [0.5,0.1,0]; % degree of polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
-                curveDirectory = [pwd '/RefFiles/Curves/Spectrograph/'];                
-                maxR = 275e3;
-                pixSamp = 3;
-                
-            else
-                
-            end
+            %Need to define an optical model structure and rules.
+            %Primary grating needs to be at the end
+            opticalModel{1} = struct('name','OffnerM1','type','OAP','coatingName','FathomGold','number',1,'angle','25','efficiency',[]);
+            opticalModel{2} = struct('name','OffnerM2','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
+            opticalModel{2} = struct('name','OffnerM3','type','OAP','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
+            opticalModel{2} = struct('name','OffnerM4','type','fold','coatingName','FathomGold','number',1,'angle','25','efficiency',[]);
+            opticalModel{4} = struct('name','OAP1','type','OAP','coatingName','FathomGold','number',2,'angle','10','efficiency',[]);
+            opticalModel{5} = struct('name','Spectrum Mirror','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
+            opticalModel{5} = struct('name','OAP2','type','OAP','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
+            opticalModel{6} = struct('name','Cross Disperser','type','grating','coatingName','FathomGold','number',1,'angle','25','efficiency',[]);
+            opticalModel{7} = struct('name','TMA1','type','conic','coatingName','FathomGold','number',1,'angle','25','efficiency',[]);
+            opticalModel{8} = struct('name','TMA2','type','conic','coatingName','FathomGold','number',1,'angle','25','efficiency',[]);
+            opticalModel{9} = struct('name','TMA3','type','spheric','coatingName','FathomGold','number',1,'angle','25','efficiency',[]);
+            opticalModel{9} = struct('name','H4RG','type','detector','coatingName','detH4RG','number',1,'angle',[],'efficiency',[]);
+            opticalModel{10} = struct('name','R6Grating','type','Grating','coatingName','R6Grating','number',1,'angle','88','efficiency',[]);
+            bandPass = [970,1270];
+%             polarization = [0.5,0.1,0]; % degree of  polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
+            curveDirectory = [pwd '/RefFiles/Curves/Spectrograph/'];
+            maxR = 275e3;
+            pixSamp = 3;
+            
             
             obj.bandPass = bandPass;
             obj.polarization = polarization;

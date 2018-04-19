@@ -52,7 +52,7 @@ classdef FiberCoupling
             if nargin == 0
                 % Provide values for superclass constructor
                 % and initialize other inputs
-                obj.WFE = [0,0,0,0,0,0,0,0]; % Pupil Zernike amplitudes piston, xtilt, ytilt, etc...
+                obj.WFE = [0,1,0,0,0,0,0,0]; % Pupil Zernike amplitudes piston, xtilt, ytilt, etc...
                 rms_scale = [1,1/2,1/2,1/sqrt(3),1/sqrt(6),1/sqrt(6),1/sqrt(8),1/sqrt(8)];
                 obj.RMS = obj.WFE.*rms_scale;
                 obj.ADC = 0; %Choose values from 0-60 in steps of 5 for the zenith angle.(This is translated as an offset fiber pos rather than beam position for computational ease)

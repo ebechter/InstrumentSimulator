@@ -26,8 +26,8 @@ classdef SuperK < Spectra
             
             obj.wavelength(:,1) = xq/1000 ; %nm in native file. convert to in microns
             obj.spectrum(:,1) = (10.^(vq/10)./1000).*1000  ; %db/nm in native file. convert to W/um 
-            
-        end%generate standard flat
+            obj.counts(:,1) = Spectra.energy2Counts(obj.wavelength,obj.spectrum); % convert energy to counts
+        end
     end       
 end
 

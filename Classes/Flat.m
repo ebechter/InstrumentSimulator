@@ -19,7 +19,8 @@ classdef Flat < Spectra
             
             obj = LoadFlat(obj,obj.scale);
             
-        end%constructor
+        end
+        
         function [obj] = LoadFlat(obj,scale)
             
             R = 275e3;
