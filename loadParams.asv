@@ -106,4 +106,4 @@ throughput3 = {'calibration','spectrograph'};
 useAO3 = 0;
 
 %Call the main script
-SimulationMain 
+SimulationMain

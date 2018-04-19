@@ -7,24 +7,25 @@ classdef Spectrograph < Instrument
     end
     
     methods
+        
         function [obj] = Spectrograph(polarization)
             %% Pre Initialization %%
             % Any code not using output argument (obj)
             %Need to define an optical model structure and rules.
             %Primary grating needs to be at the end
-            opticalModel{1} = struct('name','OffnerM1','type','OAP','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-            opticalModel{2} = struct('name','OffnerM2','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-            opticalModel{2} = struct('name','OffnerM3','type','OAP','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-            opticalModel{2} = struct('name','OffnerM4','type','fold','coatingName','FathomGold','number',1,'angle','45','efficiency',[]);
-            opticalModel{4} = struct('name','OAP1','type','OAP','coatingName','FathomGold','number',2,'angle','10','efficiency',[]);
-            opticalModel{5} = struct('name','Spectrum Mirror','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-            opticalModel{5} = struct('name','OAP2','type','OAP','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-            opticalModel{6} = struct('name','Cross Disperser','type','grating','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-            opticalModel{7} = struct('name','TMA1','type','conic','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-            opticalModel{8} = struct('name','TMA2','type','conic','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-            opticalModel{9} = struct('name','TMA3','type','spheric','coatingName','FathomGold','number',1,'angle','10','efficiency',[]);
-            opticalModel{9} = struct('name','H4RG','type','detector','coatingName','H4RG','number',1,'angle',[],'efficiency',[]);
-            opticalModel{10} = struct('name','R6Grating','type','Grating','coatingName','R6Grating','number',1,'angle','88','efficiency',[]);
+            opticalModel{1} = struct('name','OffnerM1','type','OAP','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',1);
+            opticalModel{2} = struct('name','OffnerM2','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[],'polarization',0);
+            opticalModel{3} = struct('name','OffnerM3','type','OAP','coatingName','FathomGold','number',1,'angle','10','efficiency',[],'polarization',0);
+            opticalModel{4} = struct('name','OffnerM4','type','fold','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',0);
+            opticalModel{5} = struct('name','OAP1','type','OAP','coatingName','FathomGold','number',2,'angle','10','efficiency',[],'polarization',0);
+            opticalModel{6} = struct('name','Spectrum Mirror','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[],'polarization',0);
+            opticalModel{7} = struct('name','OAP2','type','OAP','coatingName','FathomGold','number',1,'angle','10','efficiency',[],'polarization',0);
+            opticalModel{8} = struct('name','Cross Disperser','type','grating','coatingName','Xdisp','number',1,'angle',[],'efficiency',[],'polarization',0);
+            opticalModel{9} = struct('name','TMA1','type','conic','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',0);
+            opticalModel{10} = struct('name','TMA2','type','conic','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',0);
+            opticalModel{11} = struct('name','TMA3','type','spheric','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',0);
+            opticalModel{12} = struct('name','H4RG','type','detector','coatingName','detH4RG','number',1,'angle',[],'efficiency',[],'polarization',0);
+            opticalModel{13} = struct('name','R6Grating','type','Grating','coatingName','R6Grating','number',1,'angle','88','efficiency',[],'polarization',0);
             bandPass = [970,1270];
 %             polarization = [0.5,0.1,0]; % degree of  polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
             curveDirectory = [pwd '/RefFiles/Curves/Spectrograph/'];
@@ -50,13 +51,25 @@ classdef Spectrograph < Instrument
            load(gratingfile) 
            
             %% ----------Assign Object Properties----------%
-            if isempty (obj.polarization == 1) || obj.polarization(1,3) == 0
-            obj.grating= GratingEff_new;
+            if isempty (obj.polarization == 1) || obj.polarization(1,3) == 0 || obj.opticalModel{ii}.polarization == 0
+                % if the user does not set the polarization, sets it but
+                % flags as 0 or turns off the grating polarization
+                % specifically 
+                % obj.grating= GratingEff_new; 
+                % !!!!!!!!!at PDR we used this but now we should use will use
+                % unpolarized grating set below. 
+               pfrac = 0;
+               sfrac = 1-pfrac;
+               dop =  0; % this makes it unpolarized
+               
             else
+                % if polarization state is set, is flagged as 1 and the
+                % grating polarization is turned on
                pfrac = obj.polarization(1,2);
                sfrac = 1-pfrac;
                dop =  obj.polarization(1,1);
-               
+            end
+            
                %offset s and p in wavelength space
                offset = 0.5; %1/4 to 1/2 nm looks about right from measured data 
                peff = GratingEff_new(:,2:40);
@@ -75,7 +88,6 @@ classdef Spectrograph < Instrument
                obj.grating(:,1)=GratingEff_new(:,1);
                obj.grating(:,2:40)=polarized;
                
-            end
         end
         
         function [obj] = Include_Grating(obj)
@@ -109,6 +121,8 @@ classdef Spectrograph < Instrument
             colors{9}= colors{2};
             colors{10}= colors{3};
             colors{11} =[0 0.3 0];
+            colors{12} =colors{4};
+            colors{13} =colors{5};
             clear d
             
             labels = [];

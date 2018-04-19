@@ -20,14 +20,28 @@ classdef Instrument
             end
             
             for ii =1:n %loop over cellarry size (i.e. surfaces)
-                
+
                 number = obj.opticalModel{ii}.number;
                 angle = obj.opticalModel{ii}.angle;
                 coatingName = obj.opticalModel{ii}.coatingName;
                 filename = strcat(curveDirectory,coatingName,angle);
                 
-                %loadCurves
-                obj.opticalModel{ii}.efficiency = Instrument.loadCurves(filename,number,coatingName);
+                if isempty (obj.opticalModel{ii}.polarization == 1) || isempty (obj.polarization == 1) || obj.polarization(1,3) == 0
+                    %if the user does not want polarization to be used or
+                    %is not set
+                    pol = 0; % set pol = 0 to use average curve
+                    obj.opticalModel{ii}.efficiency = Instrument.loadCurves(filename,number,coatingName);
+                else
+                    %if the user does want polarization to be used
+                    pol = obj.opticalModel{ii}.polarization;
+                    
+                    pfrac = obj.polarization(1,2);
+                    dop =  obj.polarization(1,1);
+                    
+                    obj.opticalModel{ii}.efficiency = Instrument.loadPolCurves(filename,number,coatingName,pfrac,dop);
+                end
+                
+                
                 if ii == 1
                     pgress{1} = obj.opticalModel{1}.efficiency;
                 else
@@ -108,6 +122,27 @@ classdef Instrument
             throughput(:,1) = surface(:,1);
             throughput(:,2) = Rpol.^number;
         end
+        function [throughput] = loadPolCurves(filename,number,coatingName,pfrac,dop)
+            
+            temp = load([filename,'.mat']); % convert .mat to normal array from default struct format
+            temp = struct2cell(temp);
+            surface = temp{1};
+            
+            if strcmp(coatingName,'FathomGold')==1
+                Spol = (surface(:,3)/100);
+                Ppol = (surface(:,4)/100);
+                sfrac = 1-pfrac;
+                unpolarized = 0.5*(Spol+Ppol);
+                
+                Rpol = dop*(Spol*sfrac+Ppol*pfrac)+unpolarized*(1-dop);                
+                %Rpol = (Spol+Ppol)/2;
+            else
+                Rpol = surface(:,2);
+            end
+            throughput(:,1) = surface(:,1);
+            throughput(:,2) = Rpol.^number;
+        end
+        
         function[x,y]= multiply_curves(x1,y1,x2,y2)
             
             if x1(1)< x2(1)

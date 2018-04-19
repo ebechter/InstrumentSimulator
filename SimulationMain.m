@@ -1,9 +1,3 @@
-% simulation Main Script
-% clear up the workspace
-clear; clc; close all
-addpath(genpath(pwd))
-tic
-loadParams
 
 poolobj = gcp('nocreate');
 
@@ -39,7 +33,6 @@ if strcmp(SpecOrImager,'Spectrograph') ==1
     curve{2}.throughput = throughput2;
     curve{2}.AO = useAO2;
     clear source2 atmosphere2 throughput2 useAO2
-
 
     curve{3}.source = source3;
     curve{3}.atmosphere = atmosphere3;
