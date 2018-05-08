@@ -26,7 +26,10 @@ classdef Instrument
                 coatingName = obj.opticalModel{ii}.coatingName;
                 filename = strcat(curveDirectory,coatingName,angle);
                 
-                if isempty (obj.opticalModel{ii}.polarization == 1) || isempty (obj.polarization == 1) || obj.polarization(1,3) == 0
+           
+                
+                if isa(obj,'Imager') || isa(obj,'AO') || ...
+                        isempty (obj.opticalModel{ii}.polarization == 1) || isempty (obj.polarization == 1) || obj.polarization(1,3) == 0
                     %if the user does not want polarization to be used or
                     %is not set
                     pol = 0; % set pol = 0 to use average curve

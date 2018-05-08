@@ -34,7 +34,7 @@ end
 wavesolution = 0; % 1 = recalculate, 0 = load previous
 cheby = 0; % 1 = use chebyshev, 0 = 4th order polynomial
 norders=1; % max number of orders now 36
-tracenum=[1,2,3]; %  [1,2,3] traces: 1 is (bot) telescope fiber, 2 (top) telescope fiber, 3 is cal fiber (middle). 
+tracenum=[1]; %  [1,2,3] traces: 1 is (bot) telescope fiber, 2 (top) telescope fiber, 3 is cal fiber (middle). 
 
 %-----Instrument Inputs-----% 
 StarlightPath = 'Spectrograph'; % Options are "Fiber,Image,Quad,Spectrograph,WFC"
@@ -66,7 +66,7 @@ v_mag = 7;%9+1.848; %Magnitude
 vsini = 2.5;
 epsilon = 1; 
 rv = 0; 
-scale =3; %etalon spectrum upscaling factor
+scale =1; %etalon spectrum upscaling factor
 
 
 %-----Observation Conditions-----%
@@ -79,9 +79,9 @@ SkyBack = false;
 FSR = 10; %Etalon frequency GHz 
 EtalonType = 'science'; %"science" or "ref" or "fullref" or "gauss" or delta
 
-starinputs = [] 
-etaloninputs = [a b c d]
-classinputs
+% starinputs = [] 
+% etaloninputs = [a b c d]
+% classinputs
 
 % ---------------------------------------------------------------%
 tic

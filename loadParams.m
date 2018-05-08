@@ -8,11 +8,11 @@ tic
 version = '11';
 footprint = '12.22';
 numworkers=2;
-parflag = true; %true or false
+parflag = false; %true or false
 scale = 1;
 load polycoeffs2
 load chebycoeffs2
-nOrders = 36;
+nOrders = 1;
 cheby=0;
 aoType = 'SOUL'; % 'FLAO' or 'SOUL'
 entWindow = 'ilocater'; %'ilocater' (ECI) or  empty for default lbti []
@@ -20,6 +20,8 @@ zenith = 10*(pi/180); %rad
 seeing = 1.1; %arcsec
 SpecOrImager = 'Spectrograph' ; %'Imager' or Spectrograph
 tracenum = 1;
+fname = ['Aberration' num2str(1)];
+
 
 % Polarization state
 % right now this can be used on a single optic which is set in instrument
@@ -79,31 +81,68 @@ wfe(16) = 0;    % Secondary spherical abb
 % useAO1 = 1;
 %--------------%
 
-
 % Source 1  
 % ----------- % 
-% source1 = 'star'; 
+sources{1}.name = 'star'; 
+sources{1}.atmosphere = 0;
+sources{1}.throughput = {'lbt','lbti','fiberCh','fiberLink','spectrograph'};
+sources{1}.AO = 1;  
+% source1 = 'flat'; 
 % atmosphere1 = 0;
-% throughput1 = {'lbt','lbti','fiberCh','fiberLink','spectrograph'};
-% useAO1 = 1;  
-source1 = 'flat'; 
-atmosphere1 = 0;
-throughput1 = {'calibration','spectrograph'};
-useAO1 = 0;  
+% throughput1 = {'calibration','spectrograph'};
+% useAO1 = 0;  
+
+spType = 'M0V';
+vmag = 11.8;
+epsilon = 0;
+vsini = 1 ;
+rv = 0;
+units = 'counts';
 
 % Source 2  
 % ----------- % 
-source2 = 'etalon'; 
-atmosphere2 = 0;
-throughput2 = {'calibration','spectrograph'};
-useAO2 = 0;
+sources{2}.name = 'etalon'; 
+sources{2}.atmosphere = 0;
+sources{2}.throughput = {'calibration','spectrograph'};
+sources{2}.AO = 0; 
+
 
 % Source 3  
 % ----------- % 
-source3 = 'flat'; 
-atmosphere3 = 0;
-throughput3 = {'calibration','spectrograph'};
-useAO3 = 0;
+sources{3}.name = 'flat'; 
+sources{3}.atmosphere = 0;
+sources{3}.throughput = {'calibration','spectrograph'};
+sources{3}.AO = 0; 
+
+headerinfo = {
+        'version',version,'version';...
+        'footprint',footprint,'spectrograph fpt';...
+        'parallel',parflag,' ';...
+        'scale',scale,'upsample factor';...
+        'nOrders',nOrders,'num orders';...
+        'aoType',aoType,'FLAO or SOUL AO';...
+        'tracenum',tracenum','traces';...
+        'entWindow',entWindow,'entrance window';...
+        'zenith',zenith,' zenith in rad';...
+        'seeing',seeing,'seeing in arcsec';...
+        'Inst',SpecOrImager,'instrument type';...
+        'SpType',spType,'spec type';...
+        'units',units,'units of spectrum';...
+        'Vmag', vmag,' ';...
+        'RV', rv,'Injected RV (m/s)';...
+        'Vsini', vsini,' ';...
+        'Tlrcs', sources{1}.atmosphere ,'Are tellurics included 1/0';...
+        };
+
+    
+pathprefix = pwd;
+fitsname = [pathprefix,'/Output/Aberrations/',fname,'.fits'];
+
+parallelInfo = {numworkers,parflag};
+runInfo = {version,scale};
+conditions = {zenith,seeing,entWindow,aoType};
+specInfo = {footprint,nOrders,cheby,tracenum,order_coeff,wave_coeff};
+starInfo = {spType,vmag,epsilon,vsini,rv,units};
 
 %Call the main script
-SimulationMain 
+SimulationMain(parallelInfo,runInfo,fitsname,wfe,starInfo,sources,polarization,SpecOrImager)

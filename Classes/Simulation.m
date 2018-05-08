@@ -102,7 +102,7 @@ classdef Simulation
             
         end
         
-        function [OutWavelength, OutSpectrum] = trimOrders (wavelength,spectrum,wave_coeff,nOrders)
+        function [OutWavelength, OutSpectrum] = trimOrders(wavelength,spectrum,wave_coeff,nOrders)
             
             ord = size(spectrum, 2); % what is the largert order (39)
             buffer_edge = 25; %set detector edge (buffered by 5mm)
@@ -166,62 +166,50 @@ classdef Simulation
             
         end
         
-        function [APSF,FPgridx,FPgridy] = makeAbPsf(wfe,wavelength,pixSamp,scale)
-          
-            % wavelength = 1;% microns
-            % wfe = [0,0,0,0,0,0,0,0];
+        function [APSF] = makeAbPsf(wfe,pixSamp,scale)
+            
+            grid= 51;
+            pad = round((((fliplr(scale*pixSamp)-3)/3)+0.5)*grid);
             
             %Zernike phase map
             W = 0; %
             for z = 1:length(wfe)
-                Z = ZernikeCalc(z,1,scale*17); % use ZernikeCalc to produce normalized zernike surface
-                %     Z = padarray(Z,[400,400]);% increase padding on output;
+                Z = ZernikeCalc(z,1,grid); % use ZernikeCalc to produce normalized zernike surface
+                Z = padarray(Z,pad);% increase padding on output;
                 Z = Z./(max(max(Z)));
                 Ab = wfe(z)*Z;
                 W = W+Ab;
             end
             
-            %Constants (we should make this accept variables, or use
-            %defaults)
-            N = size(W,1);% variable 7/25/17 Sampling points
-            L = 50e-3;% length of grid in meters
-            dl = L/N; %Pupil plane grid spacing (meters)
-            beamD = (3/pixSamp(1))*(1/scale)*20e-3*(0.883);
-            beamDy =(3/pixSamp(2))*(1/scale)*20e-3*(0.883);
-            D = 1.75*beamD;%5.8e-3; % Pupil diameter
+            N = size(W);% variable 7/25/17 Sampling points
+            dl = 1;%L/N; %Pupil plane grid spacing (meters)
             
-            k = 2*pi./(1e-6*wavelength); %wavenumber
-            alpha = 0.11; % secondary blocking fraction
-            f = 1.33*440e-3;%24.5e-3;% (20.8e-3) focal length of lens
-            d = f; %distance before the lens
+            [xgrid,ygrid] = meshgrid((-N(2)/2+0.5:N(2)/2-0.5),(-N(1)/2+0.5:N(1)/2-0.5));
             
-            %Pupil definition
-            [x1,y1] = meshgrid((-N/2+0.5:N/2-0.5)*dl); %grid in pupil plane
-            PPgrid(:,:,1) = x1;
-            PPgrid(:,:,2) = y1;
+            circle = circ(xgrid,ygrid,grid);%outer circle
             
+            gauss=circ_gauss(xgrid,ygrid,[grid/8 grid/8]*sqrt(2),[0,0]);
             
-            PupilOffset = 0; %1mm offset
-            Pupil_cenx = x1 + PupilOffset;
-            Pupil_ceny = y1 + PupilOffset;
-            Uin1 = circ(Pupil_cenx,Pupil_ceny,D);%outer circle
-            % Uin2 = circ(Pupil_cenx,Pupil_ceny,D*alpha);%inner circle
-            % pupil = Uin1-Uin2;%total pupil plance image
-            
-            [gauss]=circ_gauss(Pupil_cenx,Pupil_ceny,[beamD/4,beamDy/4],[0,0]);
             gauss = gauss./(max(max(gauss)));
-            pupil = Uin1.*gauss;
+            pupil = circle.*gauss;
             
-            % W =pupil.*W;
             Pupil = pupil.*exp(1i*W); %Complex Pupil plane with phase term
             
             %Propogate the pupil plane to focal plane (electric fields) at
             %all wavelengths
-            [x2,y2,PSF] = lens_in_front_ft(Pupil,1e-6*wavelength,dl,f,d);
-            FPgridx = x2;
-            FPgridy = y2;
+            
+            % b = sum(abs(Pupil).^2,1);
+            % startPoints = [0.35 size(W,2)/2 pixSamp(2)*scale];
+            % gaussEqn = 'a*exp(-((x-b)/(sqrt(2)*c))^2)';
+            % f2 = fit((1:length(b))',b',gaussEqn,'Start', startPoints,'Lower', [0, 0, 0]);
+            % fprintf('pupil sigma %.3f, %.3f\n',f2.c,grid/8)
+            
+            PSF = ft2(Pupil,dl);
             
             APSF = abs(PSF).^2;
+            keep = round(grid/2);
+            APSF = APSF(0.5+N(1)/2-keep:N(1)/2+0.5+keep,0.5+N(2)/2-keep:N(2)/2+0.5+keep);
+            
             APSF = APSF./(sum(sum(APSF)));
         end
 
@@ -250,8 +238,8 @@ classdef Simulation
             
             % Determine wfe to use. scale it off of wavelength...horSamp(ii) vertSamp 
             wfeList{ii} = wfe*(wavelength(ii)/0.97);
-            [PSF,FPgridx,FPgridy] = Simulation.makeAbPsf(wfeList{ii},wavelength(ii),[3 3],scale);
-            center = [round(size(FPgridx,2)/2),round(size(FPgridy,1)/2)];
+            PSF = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
+            center = [round(size(PSF,2)/2),round(size(PSF,1)/2)];
 
             
             % No aberrations
@@ -263,7 +251,7 @@ classdef Simulation
             for ii = 2:length(wavelength)
 
                 wfeList{ii} = wfe*(wavelength(ii)/0.97);
-                [PSF,~,~] = Simulation.makeAbPsf(wfeList{ii},wavelength(ii),[horSamp(ii) vertSamp],scale);
+                PSF = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
 
 %                 [PSF,~] = Simulation.MakePSF(scale,horSamp(ii),vertSamp);
                 

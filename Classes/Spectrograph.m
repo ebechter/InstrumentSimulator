@@ -13,7 +13,7 @@ classdef Spectrograph < Instrument
             % Any code not using output argument (obj)
             %Need to define an optical model structure and rules.
             %Primary grating needs to be at the end
-            opticalModel{1} = struct('name','OffnerM1','type','OAP','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',1);
+            opticalModel{1} = struct('name','OffnerM1','type','OAP','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',0);
             opticalModel{2} = struct('name','OffnerM2','type','fold','coatingName','FathomGold','number',1,'angle','10','efficiency',[],'polarization',0);
             opticalModel{3} = struct('name','OffnerM3','type','OAP','coatingName','FathomGold','number',1,'angle','10','efficiency',[],'polarization',0);
             opticalModel{4} = struct('name','OffnerM4','type','fold','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',0);

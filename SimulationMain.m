@@ -1,11 +1,12 @@
+function SimulationMain(parallelInfo,runInfo,fitsname,wfe,starInfo,sources,polarization,SpecOrImager)
 
 poolobj = gcp('nocreate');
 
-if parflag
+if parallelInfo{2}
     usep = 'yes';
     if isempty(poolobj)
         %no pool exists and I want one
-        parpool(numworkers);
+        parpool(parallelInfo{1});
         
     else
         %just run it b/c a pool already exists
@@ -16,7 +17,7 @@ else
 end
 
 fprintf('-----\n%s simulation\nversion: %s\nfootprint: %s\nupscale factor: %i\n-----\nparallel settings\nParallel: %s\nnum. of cores: %i\n-----\n'...
-        ,SpecOrImager, version, footprint, scale, usep, numworkers)
+        ,SpecOrImager, runInfo{1}, footprint, runInfo{2}, usep, parallelInfo{1})
 
 %========== Instanciate objects ===========%
 fprintf('creating simulation objects...\n')
@@ -65,7 +66,7 @@ for ii = tracenum
         
     elseif strcmp('star', curve{ii}.source) == 1 && exist('star','var') == 0
         % make a star
-        star = Star('M0V',11.8,1,2,0,'counts');
+        star = Star(spType,vmag,epsilon,vsini,rv,units);
         
     elseif strcmp('flat', curve{ii}.source) == 1 && exist('flat','var') == 0
         % make a flat spectrum
@@ -92,7 +93,7 @@ for ii = tracenum
     
     if any(strcmp('spectrograph', curve{ii}.throughput)) == 1 && exist('spectrograph','var') == 0
         % make the spectrograph throughput
-        spectrograph = Spectrograph();
+        spectrograph = Spectrograph(polarization);
     end
     
     if any(strcmp('lbt', curve{ii}.throughput)) == 1 && exist('lbt','var') == 0
@@ -366,11 +367,11 @@ for jj = tracenum
 end
 
 fprintf('-----\n')
-flatframe = sum(sum(detector,4),3);
+frame = sum(sum(detector,4),3);
 clear detector
 
 fprintf('writing detector face to a fits file...')
-save FlatTest flatframe
-% Simulation.WriteFits(fitsname,DetectorFace,headerinfo)
+save BackupArray frame
+simulation.WriteFits(fitsname,frame,headerinfo)
 fprintf('%s \n',char(hex2dec('2713')))
-toc
+end
