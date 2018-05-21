@@ -1,16 +1,19 @@
-function SimulationMain(parallelInfo,runInfo,fitsname,wfe,starInfo,sources,polarization,SpecOrImager)
-
-
-
-
-
-
-
-
-
-
+function SimulationMain(parallelInfo,runInfo, specInfo,fitsname, ... 
+                    wfe,starInfo,source,polarization,SpecOrImager,conditions, headerinfo)
 
 poolobj = gcp('nocreate');
+nOrders = specInfo{2};
+cheby = specInfo{3};
+p1 = specInfo{4};
+ret = specInfo{5};
+tracenum = specInfo{6};
+order_coeff = specInfo{7};
+wave_coeff = specInfo{8};
+zenith = conditions{1};
+seeing = conditions{2};
+entWindow = conditions{3};
+aoType = conditions{4};
+scale = runInfo{2};
 
 if parallelInfo{2}
     usep = 'yes';
@@ -27,68 +30,69 @@ else
 end
 
 fprintf('-----\n%s simulation\nversion: %s\nfootprint: %s\nupscale factor: %i\n-----\nparallel settings\nParallel: %s\nnum. of cores: %i\n-----\n'...
-        ,SpecOrImager, runInfo{1}, footprint, runInfo{2}, usep, parallelInfo{1})
+        ,SpecOrImager, runInfo{1}, specInfo{1}, runInfo{2}, usep, parallelInfo{1})
 
 %========== Instanciate objects ===========%
 fprintf('creating simulation objects...\n')
 
-if strcmp(SpecOrImager,'Spectrograph') ==1
-    curve{1}.source = source1;
-    curve{1}.atmosphere = atmosphere1;
-    curve{1}.throughput = throughput1;
-    curve{1}.AO = useAO1;
-    clear source1 atmosphere1 throughput1 useAO1
-    
-    curve{2}.source = source2;
-    curve{2}.atmosphere = atmosphere2;
-    curve{2}.throughput = throughput2;
-    curve{2}.AO = useAO2;
-    clear source2 atmosphere2 throughput2 useAO2
-
-    curve{3}.source = source3;
-    curve{3}.atmosphere = atmosphere3;
-    curve{3}.throughput = throughput3;
-    curve{3}.AO = useAO3;
-    clear source3 atmosphere3 throughput3 useAO3
-
-    
-elseif strcmp(SpecOrImager,'Imager') == 1
-    
-    tracenum = 1;
-    
-    curve{1}.source = source1;
-    curve{1}.atmosphere = atmosphere1;
-    curve{1}.throughput = throughput1;
-    curve{1}.AO = useAO1;
-    
-    clear source1 atmosphere1 throughput1 useAO1
-    clear source2 atmosphere2 throughput2 useAO2
-    clear source3 atmosphere3 throughput3 useAO3
-end
+% if strcmp(SpecOrImager,'Spectrograph') ==1
+%     source{1}.name = source1;
+%     source{1}.atmosphere = atmosphere1;
+%     source{1}.throughput = throughput1;
+%     source{1}.AO = useAO1;
+%     clear source1 atmosphere1 throughput1 useAO1
+%     
+%     source{2}.name = source2;
+%     source{2}.atmosphere = atmosphere2;
+%     source{2}.throughput = throughput2;
+%     source{2}.AO = useAO2;
+%     clear source2 atmosphere2 throughput2 useAO2
+% 
+%     source{3}.name = source3;
+%     source{3}.atmosphere = atmosphere3;
+%     source{3}.throughput = throughput3;
+%     source{3}.AO = useAO3;
+%     clear source3 atmosphere3 throughput3 useAO3
+% 
+%     
+% elseif strcmp(SpecOrImager,'Imager') == 1
+%     
+%     tracenum = 1;
+%     
+%     source{1}.name = source1;
+%     source{1}.atmosphere = atmosphere1;
+%     source{1}.throughput = throughput1;
+%     source{1}.AO = useAO1;
+%     
+%     clear source1 atmosphere1 throughput1 useAO1
+%     clear source2 atmosphere2 throughput2 useAO2
+%     clear source3 atmosphere3 throughput3 useAO3
+% end
 
 for ii = tracenum
     
     %========== Source Options ===========%
     
-    if strcmp('etalon', curve{ii}.source) == 1 && exist('etalon','var') == 0
+    if strcmp('etalon', source{ii}.name) == 1 && exist('etalon','var') == 0
         % make an etalon
         etalon = Etalon(scale);
         
-    elseif strcmp('star', curve{ii}.source) == 1 && exist('star','var') == 0
+    elseif strcmp('star', source{ii}.name) == 1 && exist('star','var') == 0
         % make a star
-        star = Star(spType,vmag,epsilon,vsini,rv,units);
+
+        star = Star(starInfo{1},starInfo{2},starInfo{3},starInfo{4},starInfo{5},starInfo{6});
         
-    elseif strcmp('flat', curve{ii}.source) == 1 && exist('flat','var') == 0
+    elseif strcmp('flat', source{ii}.name) == 1 && exist('flat','var') == 0
         % make a flat spectrum
         flat = Flat(scale);
     
-    elseif strcmp('superk', curve{ii}.source) == 1 && exist('superk','var') == 0
+    elseif strcmp('superk', source{ii}.name) == 1 && exist('superk','var') == 0
         superk = SuperK();
     end
     
     %========== Atmosphere Options ===========%
     
-    if curve{ii}.atmosphere == 1 && exist('atmosphere','var') == 0
+    if source{ii}.atmosphere == 1 && exist('atmosphere','var') == 0
         atmosphere = Atmosphere();
     end
     
@@ -101,54 +105,54 @@ for ii = tracenum
         aoComponents = [];
     end
     
-    if any(strcmp('spectrograph', curve{ii}.throughput)) == 1 && exist('spectrograph','var') == 0
+    if any(strcmp('spectrograph', source{ii}.throughput)) == 1 && exist('spectrograph','var') == 0
         % make the spectrograph throughput
         spectrograph = Spectrograph(polarization);
     end
     
-    if any(strcmp('lbt', curve{ii}.throughput)) == 1 && exist('lbt','var') == 0
+    if any(strcmp('lbt', source{ii}.throughput)) == 1 && exist('lbt','var') == 0
         % make the lbt throughput
         lbt = Imager('LBT');
         imagerComponents = [imagerComponents, lbt];
     end
     
-    if any(strcmp('lbti', curve{ii}.throughput)) == 1 && exist('lbti','var') == 0
+    if any(strcmp('lbti', source{ii}.throughput)) == 1 && exist('lbti','var') == 0
         % make the l throughput
         lbti = Imager('LBTI');
         imagerComponents = [imagerComponents, lbti];
     end
     
-    if any(strcmp('fiberCh', curve{ii}.throughput)) == 1 && exist('fiberCh','var') == 0
+    if any(strcmp('fiberCh', source{ii}.throughput)) == 1 && exist('fiberCh','var') == 0
         % make the l throughput
         fiber = Imager('FIBER');
         imagerComponents = [imagerComponents, fiber];
     end
     
-    if any(strcmp('imageCh', curve{ii}.throughput)) == 1 && exist('fiberCh','var') == 0
+    if any(strcmp('imageCh', source{ii}.throughput)) == 1 && exist('fiberCh','var') == 0
         % make the l throughput
         andor = Imager('ANDOR');
         imagerComponents = [imagerComponents, andor];
     end
     
-    if any(strcmp('quadCh', curve{ii}.throughput)) == 1 && exist('quadCh','var') == 0
+    if any(strcmp('quadCh', source{ii}.throughput)) == 1 && exist('quadCh','var') == 0
         % make the l throughput
         quad = Imager('QUADCELL');
         imagerComponents = [imagerComponents, quad];
     end
     
-    if any(strcmp('wfc', curve{ii}.throughput)) == 1 && exist('wfc','var') == 0
+    if any(strcmp('wfc', source{ii}.throughput)) == 1 && exist('wfc','var') == 0
         % make the l throughput
         wfc = Imager('WFC');
         imagerComponents = [imagerComponents, wfc];
     end
 
-    if curve{ii}.AO == 1 && exist('lbti_ao','var') == 0
+    if source{ii}.AO == 1 && exist('lbti_ao','var') == 0
         % make the l throughput
         lbti_ao = AO([aoType entWindow]);
         aoComponents = [aoComponents, lbti_ao];
     end
     
-    if any(strcmp('filter', curve{ii}.throughput)) == 1 && exist('filter','var') == 0
+    if any(strcmp('filter', source{ii}.throughput)) == 1 && exist('filter','var') == 0
         % make the lbt throughput
         filter = Imager('Filter');
         imagerComponents = [imagerComponents, filter];
@@ -164,7 +168,7 @@ spectral_cell = cell(3,1);
 
 for ii = tracenum
     
-    if strcmp(curve{ii}.source,'star')
+    if strcmp(source{ii}.name,'star')
         
         if strcmp(SpecOrImager,'Spectrograph') == 1
             spectral_cell{ii} = Simulation.addStar(spectrograph.maxR,spectrograph.pixSamp, simulation.scale, ...
@@ -176,7 +180,7 @@ for ii = tracenum
                 spectral_cell{ii}(:,2) = Star.energy2Counts(star.wavelength,star.spectrum);
         end
         
-        if curve{ii}.atmosphere == 1
+        if source{ii}.atmosphere == 1
             
             spectral_cell{ii}(:,2) = Simulation.addAtmosphere(spectral_cell{ii}(:,1),spectral_cell{ii}(:,2), ...
                 atmosphere.telluric, atmosphere.skyback);
@@ -186,7 +190,7 @@ for ii = tracenum
         spectral_cell{ii}(:,2) = Simulation.addCollectingArea(spectral_cell{ii}(:,2),lbt.apDiameter,lbt.blockFrac);
         spectral_cell{ii}(:,2) = Star.fluxDenToflux(spectral_cell{ii}(:,1),spectral_cell{ii}(:,2));
         
-        if curve{ii}.AO == 1
+        if source{ii}.AO == 1
             fprintf('calculating strehl ratio...')
 
             % if we want ao, first check if its already been made
@@ -208,7 +212,7 @@ for ii = tracenum
 
         end
         
-        if isempty(curve{ii}.throughput) == 0
+        if isempty(source{ii}.throughput) == 0
             
             if exist('starThroughput','var') ==0
                 
@@ -221,7 +225,7 @@ for ii = tracenum
         end
         
         
-        if any(strcmp('fiberLink', curve{ii}.throughput)) == 1
+        if any(strcmp('fiberLink', source{ii}.throughput)) == 1
             
             fprintf('calculating fiber coupling...')
             
@@ -255,25 +259,25 @@ for ii = tracenum
 
         end
 
-    elseif strcmp(curve{ii}.source,'etalon')
+    elseif strcmp(source{ii}.name,'etalon')
 
         spectral_cell{ii} = [etalon.wavelength etalon.counts];
         tputProg{1,1} = [etalon.wavelength*1e3,ones(size(etalon.counts))];
         tputProg{2,1} = 'EtalonOnes';
     
-    elseif strcmp(curve{ii}.source,'flat')
+    elseif strcmp(source{ii}.name,'flat')
         
         spectral_cell{ii} = [flat.wavelength flat.counts];
         tputProg{1,1} = [flat.wavelength*1e3,ones(size(flat.counts))];
         tputProg{2,1} = 'FlatOnes';
         
-    elseif strcmp('superk', curve{ii}.source) == 1
+    elseif strcmp('superk', source{ii}.name) == 1
         
         spectral_cell{ii}(:,1) = superk.wavelength;
         spectral_cell{ii}(:,2) = superk.counts;
         spectral_cell{ii}(:,2) = Star.fluxDenToflux(spectral_cell{ii}(:,1),spectral_cell{ii}(:,2));
         
-        if isempty(curve{ii}.throughput) == 0
+        if isempty(source{ii}.throughput) == 0
             
             if exist('starThroughput','var') ==0
                 [Throughput,tputProg] = Simulation.combineImagerThroughput(imagerComponents);
@@ -317,7 +321,7 @@ for ii = tracenum
         
         spectral_cell{ii} = Simulation.Xdisperse(spectral_cell{ii},nOrders,wave_coeff);
         
-        if any(strcmp('spectrograph', curve{ii}.throughput)) == 1
+        if any(strcmp('spectrograph', source{ii}.throughput)) == 1
             
             % include throughput of spectrograph.
             
@@ -346,11 +350,11 @@ fprintf('-----\nclipping spectrum to detector...\n')
 for jj = tracenum
     
     fprintf('trace %i \n',jj)
-    if parflag == true
+    if parallelInfo{2} == true
         parallel_scale = simulation.scale;
         parallel_cell = spectral_cell{jj};
         
-        parfor ii = 1:nOrders
+        parfor ii = 1:specInfo{2}
             
             fprintf('working on order %i... ',ii)
             
@@ -362,7 +366,7 @@ for jj = tracenum
         
         clear temp_cell
     else
-        for ii = 1:nOrders
+        for ii = 1:specInfo{2}
             
             fprintf('working on order %i... ',ii)
             
