@@ -207,7 +207,7 @@ classdef Simulation
             PSF = ft2(Pupil,dl);
             
             APSF = abs(PSF).^2;
-            keep = round(grid/2);
+            keep = round(grid/3);
             APSF = APSF(0.5+N(1)/2-keep:N(1)/2+0.5+keep,0.5+N(2)/2-keep:N(2)/2+0.5+keep);
             
             APSF = APSF./(sum(sum(APSF)));
@@ -237,7 +237,7 @@ classdef Simulation
             ii = 1;
             
             % Determine wfe to use. scale it off of wavelength...horSamp(ii) vertSamp 
-            wfeList{ii} = wfe*(wavelength(ii)/0.97);
+            wfeList{ii} = 2*pi*wfe*(0.97/wavelength(ii));
             PSF = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
             center = [round(size(PSF,2)/2),round(size(PSF,1)/2)];
 

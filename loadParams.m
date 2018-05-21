@@ -7,12 +7,12 @@ tic
 % Parameters 
 version = '11';
 footprint = '12.22';
-numworkers=2;
+numworkers=4;
 parflag = false; %true or false
 scale = 1;
 load polycoeffs2
 load chebycoeffs2
-nOrders = 1;
+nOrders = 36;
 cheby=0;
 aoType = 'SOUL'; % 'FLAO' or 'SOUL'
 entWindow = 'ilocater'; %'ilocater' (ECI) or  empty for default lbti []
@@ -20,7 +20,7 @@ zenith = 10*(pi/180); %rad
 seeing = 1.1; %arcsec
 SpecOrImager = 'Spectrograph' ; %'Imager' or Spectrograph
 tracenum = 1;
-fname = ['Aberration' num2str(1)];
+fname = ['fullNoAb'];
 
 
 % Polarization state
@@ -141,8 +141,10 @@ fitsname = [pathprefix,'/Output/Aberrations/',fname,'.fits'];
 parallelInfo = {numworkers,parflag};
 runInfo = {version,scale};
 conditions = {zenith,seeing,entWindow,aoType};
-specInfo = {footprint,nOrders,cheby,tracenum,order_coeff,wave_coeff};
+specInfo = {footprint,nOrders,cheby,p1,ret,tracenum,order_coeff,wave_coeff};
 starInfo = {spType,vmag,epsilon,vsini,rv,units};
 
 %Call the main script
-SimulationMain(parallelInfo,runInfo,fitsname,wfe,starInfo,sources,polarization,SpecOrImager)
+SimulationMain(parallelInfo,runInfo,specInfo,fitsname, ...
+                wfe,starInfo,sources,polarization,SpecOrImager,conditions, headerinfo)
+toc

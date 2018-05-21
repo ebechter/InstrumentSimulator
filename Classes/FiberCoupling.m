@@ -134,7 +134,8 @@ classdef FiberCoupling
             f = 24.5e-3;% (20.8e-3) focal length of lens 
             d = f; %distance before the lens
             obj.gridparams = [dl,f,d];
-            .....................
+                        
+            %..................
             %Pupil definition
             [x1,y1] = meshgrid((-N/2+0.5:N/2-0.5)*dl); %grid in pupil plane
             obj.PPgrid(:,:,1) = x1;
