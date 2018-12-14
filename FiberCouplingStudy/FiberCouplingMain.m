@@ -3,10 +3,14 @@ clear; clc; %close all
 
 % Start from the correct path
 current_path = pwd; 
-if current_path(end-8:end) ~= 'Simulator'
+if strcmp(current_path(end-8:end),'Simulator')~=1
     
-    if current_path(1:7) == 'Volumes'
+    if strcmp(current_path(1:7),'Volumes')==1
         cd 'Volumes/Software/Simulator'
+    
+    elseif strcmp(current_path(2:4),'afs')==1
+        cd '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/'
+   
     else
         cd([current_path(1:2) '\Simulator'])
     end

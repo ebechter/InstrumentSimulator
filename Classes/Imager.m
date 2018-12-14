@@ -174,9 +174,13 @@ classdef Imager < Instrument
             end            
             
             current_path = pwd;
-            if current_path(1:7) == 'Volumes'
+            if strcmp(current_path(1:7),'Volumes')==1
+               curveDirectory = 'Volumes/Software/Simulator/RefFiles/Curves/Instrument/';
+
+
+            elseif strcmp(current_path(2:4),'afs')==1
                 
-                curveDirectory = 'Volumes/Software/Simulator/RefFiles/Curves/Instrument/';
+                curveDirectory = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/Curves/Instrument/';
             else
                 
                 curveDirectory = [current_path(1:2) '\Simulator\RefFiles\Curves\Instrument\'];
