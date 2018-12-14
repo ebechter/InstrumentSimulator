@@ -33,7 +33,7 @@ classdef AO < Instrument
             elseif strcmp(type(1:4),'FLAO') == 1
                 
                 if strcmp(type(5:end),'ilocater') == 1
-                    opticalModel{4} = struct('name','EntWindow','type','dichroic','coatingName','ECIEntWR','number',1,'angle',[],'efficiency',[]);
+                    opticalModel{4} = struct('name','EntWindow','type','dichroic','coatingName','AlluxaEntWR','number',1,'angle','15','efficiency',[]);
                 else
                     opticalModel{4} = struct('name','EntWindow','type','dichroic','coatingName','LBTI_ZnSeR','number',1,'angle',[],'efficiency',[]);
                 end
@@ -49,7 +49,7 @@ classdef AO < Instrument
             elseif strcmp(type(1:4),'SOUL') == 1
                 
                 if strcmp(type(5:end),'ilocater') == 1
-                    opticalModel{4} = struct('name','Entrance Window','type','dichroic','coatingName','ECIEntWR','number',1,'angle',[],'efficiency',[]);
+                    opticalModel{4} = struct('name','Entrance Window','type','dichroic','coatingName','AlluxaEntWR','number',1,'angle','15','efficiency',[]);
                 else
                     opticalModel{4} = struct('name','Entrance Window','type','dichroic','coatingName','LBTI_ZnSeR','number',1,'angle',[],'efficiency',[]);
                 end
@@ -62,7 +62,22 @@ classdef AO < Instrument
                 plateScale = [];
                 
             end
-            curveDirectory = [pwd '/RefFiles/Curves/Instrument/'];
+            
+            current_path = pwd;
+            if current_path(1:7) == 'Volumes'
+                
+                curveDirectory = 'Volumes/Software/Simulator/RefFiles/Curves/Instrument/';
+                load('Volumes/Software/Simulator/polycoeffs2.mat')
+            else
+                
+                curveDirectory = [current_path(1:2) '\Simulator\RefFiles\Curves\Instrument\'];
+                load([current_path(1:2) '\Simulator\polycoeffs2.mat']);
+            end
+            
+            
+            
+            
+            
             obj.bandPass = bandPass;
             obj.pixelPitch = [];
             obj.detectorDimensions = [];

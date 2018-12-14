@@ -26,13 +26,24 @@ classdef Star < Spectra
                 obj.spectrumUnits = units;
                 
             end
-            pathprefix = pwd;
+            
             
             global allardpath
             global starfile
-            starfile =  [pathprefix '/RefFiles/Star/fullpecautmamajek.xlsx'];
-            allardpath = [pathprefix '/../Spectral_Catalogs/FAllard/CIFIST6b_trimmed_resampled/'];
             
+            current_path = pwd;
+            if current_path(1:7) == 'Volumes'
+                
+                starfile = 'Volumes/Software/Simulator/RefFiles/Star/fullpecautmamajek.xlsx';
+                allardpath = 'Volumes/Software/Spectral_Catalogs/FAllard/CIFIST6b_trimmed_resampled/';
+                
+            else
+                
+                starfile = [current_path(1:2) '\Simulator\RefFiles\Star\fullpecautmamajek.xlsx'];
+                allardpath = [current_path(1:2) '\Spectral_Catalogs\FAllard\CIFIST6b_trimmed_resampled\'];
+            end
+            
+           
             %Load the calibrated spectrum. %Scales to magnitude and calculates color to temp
             obj = loadSpectrum(obj); %target.Spectrum is in w/m^2/micron, target.Wavelength in microns
             %-----Stellar Effects-----%

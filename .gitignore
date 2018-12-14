@@ -5,3 +5,6 @@ backupArray.mat
 *.png
 *.pdf
 *.mp4
+*.fig
+/FiberCouplingStudy/Output/
+PersistenceStudy\.zip

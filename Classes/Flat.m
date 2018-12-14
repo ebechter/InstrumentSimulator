@@ -1,5 +1,6 @@
 classdef Flat < Spectra
     properties
+       stepSize
         % will fill these out as this class is better understood
     end
     
@@ -29,7 +30,7 @@ classdef Flat < Spectra
             step=(dlam/scale);
             
             obj.wavelength = (0.2: step :1.5)' ; % microns
-            obj.counts = 5e3*ones(size(obj.wavelength)) ; % BS scale factor
+            obj.counts = ones(size(obj.wavelength)) ; % BS scale factor
             
         end%generate standard flat
     end

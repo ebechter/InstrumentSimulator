@@ -1,7 +1,51 @@
-function SimulationMain(parallelInfo,runInfo, specInfo,fitsname, ... 
-                    wfe,starInfo,source,polarization,SpecOrImager,conditions, headerinfo)
+function SimulationMain(parallelInfo,runInfo, specInfo,fitsname, ...
+    wfe,starInfo,source,polarization,SpecOrImager,conditions, headerinfo,persistentSource)
 
-poolobj = gcp('nocreate');
+% Creates all simulation objects, combines throughput with flux,
+% simlulates physical instrument response (PSF or spectrum) and writes data product  
+%
+% Inputs
+% ------
+% parallelInfo :
+%   
+% runInfo :
+% 
+% specInfo :
+% 
+% fitsname :
+% 
+% wfe :
+% 
+% starInfo :
+% 
+% source :
+% 
+% polarization :
+% 
+% specOrImager :
+% 
+% conditions :
+% 
+% headerinfo :
+% 
+% persistentSource :
+% 
+%
+% Internal parameters
+% -------------------
+% spectralcell:
+%
+% outputs
+% -------
+% fitsfile:
+%
+% backupArray:
+%
+
+%--------------------%
+% Break out variables
+%--------------------%
+
 nOrders = specInfo{2};
 cheby = specInfo{3};
 p1 = specInfo{4};
@@ -14,6 +58,13 @@ seeing = conditions{2};
 entWindow = conditions{3};
 aoType = conditions{4};
 scale = runInfo{2};
+persistence = persistentSource.persistence;
+
+%-------------------%
+% Processing Options
+%-------------------%
+
+poolobj = gcp('nocreate');
 
 if parallelInfo{2}
     usep = 'yes';
@@ -30,9 +81,12 @@ else
 end
 
 fprintf('-----\n%s simulation\nversion: %s\nfootprint: %s\nupscale factor: %i\n-----\nparallel settings\nParallel: %s\nnum. of cores: %i\n-----\n'...
-        ,SpecOrImager, runInfo{1}, specInfo{1}, runInfo{2}, usep, parallelInfo{1})
+    ,SpecOrImager, runInfo{1}, specInfo{1}, runInfo{2}, usep, parallelInfo{1})
 
-%========== Instanciate objects ===========%
+%---------------------%
+% Instanciate objects
+%---------------------%
+
 fprintf('creating simulation objects...\n')
 
 % if strcmp(SpecOrImager,'Spectrograph') ==1
@@ -41,67 +95,104 @@ fprintf('creating simulation objects...\n')
 %     source{1}.throughput = throughput1;
 %     source{1}.AO = useAO1;
 %     clear source1 atmosphere1 throughput1 useAO1
-%     
+%
 %     source{2}.name = source2;
 %     source{2}.atmosphere = atmosphere2;
 %     source{2}.throughput = throughput2;
 %     source{2}.AO = useAO2;
 %     clear source2 atmosphere2 throughput2 useAO2
-% 
+%
 %     source{3}.name = source3;
 %     source{3}.atmosphere = atmosphere3;
 %     source{3}.throughput = throughput3;
 %     source{3}.AO = useAO3;
 %     clear source3 atmosphere3 throughput3 useAO3
-% 
-%     
+%
+%
 % elseif strcmp(SpecOrImager,'Imager') == 1
-%     
+%
 %     tracenum = 1;
-%     
+%
 %     source{1}.name = source1;
 %     source{1}.atmosphere = atmosphere1;
 %     source{1}.throughput = throughput1;
 %     source{1}.AO = useAO1;
-%     
+%
 %     clear source1 atmosphere1 throughput1 useAO1
 %     clear source2 atmosphere2 throughput2 useAO2
 %     clear source3 atmosphere3 throughput3 useAO3
 % end
 
-for ii = tracenum
-    
-    %========== Source Options ===========%
-    
-    if strcmp('etalon', source{ii}.name) == 1 && exist('etalon','var') == 0
-        % make an etalon
-        etalon = Etalon(scale);
-        
-    elseif strcmp('star', source{ii}.name) == 1 && exist('star','var') == 0
-        % make a star
 
-        star = Star(starInfo{1},starInfo{2},starInfo{3},starInfo{4},starInfo{5},starInfo{6});
+%---------------------%
+% Source Options
+%---------------------%
+
+for ii = tracenum
+       
+    %========== Standard Source Options ===========%
+    
+    % make an etalon
+    if strcmp('etalon', source{ii}.name) == 1 && exist('etalon','var') == 0
         
+        etalon = Etalon(scale);
+      
+        
+    % make a star    
+    elseif strcmp('star', source{ii}.name) == 1 && exist('star','var') == 0
+        
+        star = Star(starInfo{1},starInfo{2},starInfo{3},starInfo{4},starInfo{5},starInfo{6});
+     
+    % make a flat spectrum    
     elseif strcmp('flat', source{ii}.name) == 1 && exist('flat','var') == 0
-        % make a flat spectrum
+        
         flat = Flat(scale);
     
+    % make a supercontinuum spectrum      
     elseif strcmp('superk', source{ii}.name) == 1 && exist('superk','var') == 0
+        
         superk = SuperK();
+        
     end
     
-    %========== Atmosphere Options ===========%
+    
+    %========== Persistent Source Options ===========%
+    
+    if strcmp('etalon', persistentSource.name) == 1 && exist('persistentEtalon','var') == 0
+        % make an etalon
+        persistentEtalon = Etalon(scale);
+        
+    elseif strcmp('star', persistentSource.name) == 1 && exist('persistentStar','var') == 0
+        % make a star
+        
+        persistentStar = Star(persistentSource.spType,persistentSource.vmag,persistentSource.epsilon,...
+            persistentSource.vsini,persistentSource.rv,persistentSource.units);
+        
+    elseif strcmp('flat', persistentSource.name) == 1 && exist('persistentFlat','var') == 0
+        % make a flat spectrum
+        persistentFlat = Flat(scale);
+        
+    elseif strcmp('superk', persistentSource.name) == 1 && exist('persistentSuperk','var') == 0
+        persistentSuperk = SuperK();
+    end
+    
+%---------------------%
+% Create atmosphere
+%---------------------%
     
     if source{ii}.atmosphere == 1 && exist('atmosphere','var') == 0
         atmosphere = Atmosphere();
     end
     
-    %========== Throughput Options ===========%
-    if exist('star_components','var')==0
+%---------------------%
+% Build instrument 
+%---------------------%
+    
+    if exist('imagerComponents','var')==0 && exist('imagerComponents','var') ==0
         imagerComponents =[];
     end
     
-    if exist('AO_list','var') ==0
+    if exist('AO_list','var')==0 && exist('aoComponents','var') ==0
         aoComponents = [];
     end
     
@@ -117,68 +208,102 @@ for ii = tracenum
     end
     
     if any(strcmp('lbti', source{ii}.throughput)) == 1 && exist('lbti','var') == 0
-        % make the l throughput
+        % make the lbti throughput
         lbti = Imager('LBTI');
         imagerComponents = [imagerComponents, lbti];
     end
     
     if any(strcmp('fiberCh', source{ii}.throughput)) == 1 && exist('fiberCh','var') == 0
-        % make the l throughput
+        % make the fiber channel throughput
         fiber = Imager('FIBER');
         imagerComponents = [imagerComponents, fiber];
     end
     
     if any(strcmp('imageCh', source{ii}.throughput)) == 1 && exist('fiberCh','var') == 0
-        % make the l throughput
+        % make the andor channel throughput
         andor = Imager('ANDOR');
         imagerComponents = [imagerComponents, andor];
     end
     
     if any(strcmp('quadCh', source{ii}.throughput)) == 1 && exist('quadCh','var') == 0
-        % make the l throughput
+        % make the quad call channel throughput
         quad = Imager('QUADCELL');
         imagerComponents = [imagerComponents, quad];
     end
     
     if any(strcmp('wfc', source{ii}.throughput)) == 1 && exist('wfc','var') == 0
-        % make the l throughput
+        % make the wfc throughput
         wfc = Imager('WFC');
         imagerComponents = [imagerComponents, wfc];
     end
-
+    
     if source{ii}.AO == 1 && exist('lbti_ao','var') == 0
-        % make the l throughput
+        % make the ao system throughput
         lbti_ao = AO([aoType entWindow]);
         aoComponents = [aoComponents, lbti_ao];
     end
     
     if any(strcmp('filter', source{ii}.throughput)) == 1 && exist('filter','var') == 0
-        % make the lbt throughput
+        % make the filter throughput
         filter = Imager('Filter');
         imagerComponents = [imagerComponents, filter];
     end
     
+    if any(strcmp('flat', source{ii}.throughput)) == 1 && exist('flat','var') == 0
+        % make the a flat instrument throughput
+        flat = Imager('flat');
+        imagerComponents = [imagerComponents, flat];
+    end
+    
 end
 
-simulation = Simulation(scale); % upscaling simulation
-spectral_cell = cell(3,1);
 
+%---------------------%
+% Start simulation 
+%---------------------%
+
+simulation = Simulation(scale); % upscaling simulation
+
+spectral_cell = cell(3,1);
 
 % this decides how to combine throughput terms with sources and atmospheres for each of the traces.
 
 for ii = tracenum
     
+    %---------------%
+    % Star sources
+    %---------------%
+    
     if strcmp(source{ii}.name,'star')
+        
+        %---------------%
+        % Spectrograph 
+        %---------------%
         
         if strcmp(SpecOrImager,'Spectrograph') == 1
             spectral_cell{ii} = Simulation.addStar(spectrograph.maxR,spectrograph.pixSamp, simulation.scale, ...
-                star.wavelength,star.spectrum,star.rv);
+                star.wavelength,star.spectrum,star.rv,0); % spectrum units in W/m^2/um
             
+            if persistence ~=0
+                pStar = Simulation.addStar(spectrograph.maxR,spectrograph.pixSamp, simulation.scale, ...
+                    persistentStar.wavelength,persistentStar.spectrum,persistentStar.rv,persistence); % spectrum units in W/m^2/um
+                spectral_cell{ii} = Simulation.CombineSpectra(spectral_cell{ii},pStar);
+                clear pStar
+            end
+            
+        %---------------%
+        % or Imager
+        %---------------%  
+        
         elseif strcmp(SpecOrImager,'Imager') == 1
             
-                spectral_cell{ii}(:,1) = star.wavelength;
-                spectral_cell{ii}(:,2) = Star.energy2Counts(star.wavelength,star.spectrum);
+            spectral_cell{ii}(:,1) = star.wavelength;
+            spectral_cell{ii}(:,2) = Star.energy2Counts(star.wavelength,star.spectrum);
         end
+        
+        %------------------%
+        % Create Atmosphere
+        %------------------%  
         
         if source{ii}.atmosphere == 1
             
@@ -187,12 +312,22 @@ for ii = tracenum
             
         end
         
-        spectral_cell{ii}(:,2) = Simulation.addCollectingArea(spectral_cell{ii}(:,2),lbt.apDiameter,lbt.blockFrac);
-        spectral_cell{ii}(:,2) = Star.fluxDenToflux(spectral_cell{ii}(:,1),spectral_cell{ii}(:,2));
+        %--------------------%
+        % Convert Flux values
+        %--------------------%
+        
+        spectral_cell{ii}(:,2) = Simulation.addCollectingArea(spectral_cell{ii}(:,2),lbt.apDiameter,lbt.blockFrac); % spectrum units in....
+        
+        spectral_cell{ii}(:,2) = Star.fluxDenToflux(spectral_cell{ii}(:,1),spectral_cell{ii}(:,2)); % spectrum units in....
+        
+        
+        %----------------------%
+        % Compute AO correction
+        %----------------------%
         
         if source{ii}.AO == 1
             fprintf('calculating strehl ratio...')
-
+            
             % if we want ao, first check if its already been made
             if exist('AO_throughput','var') == 0
                 
@@ -209,8 +344,13 @@ for ii = tracenum
             
             strehlR = Simulation.calculateStrehlRatio(aoType,seeing,wfsCounts,zenith);
             fprintf('%s \n',char(hex2dec('2713')))
-
+            
         end
+        
+        
+        %---------------------%
+        % Combine throughput 
+        %---------------------%
         
         if isempty(source{ii}.throughput) == 0
             
@@ -220,30 +360,62 @@ for ii = tracenum
             end
             
             throughputGrid = Simulation.resampleToGrid(starThroughput(:,1)*1e-3,starThroughput(:,2),spectral_cell{ii}(:,1));
-            spectral_cell{ii}(:,2) = spectral_cell{ii}(:,2).*throughputGrid;
-
+            
+           
+            
+            if source{ii}.tput_flag == 1  % Turn on throughput
+                
+                spectral_cell{ii}(:,2) = spectral_cell{ii}(:,2).*throughputGrid;
+                
+                
+            else                        % Turn off throughput
+                
+                spectral_cell{ii}(:,2) = spectral_cell{ii}(:,2);
+                
+            end
+            
         end
         
+        %---------------------%
+        % Add fiber coupling 
+        %---------------------%
         
         if any(strcmp('fiberLink', source{ii}.throughput)) == 1
             
+            %------------------------------------------------%
+            % Fiber inputs (these should be moved out of here
+            %------------------------------------------------%
+            
             fprintf('calculating fiber coupling...')
             
-            strehl = strehlR; 
             strehlR(:,1) = strehlR(:,1)*1000;% need to work in nm for fiber coupling
+            
             wfef = [0,0,0,0,0,0,0,0]; % complicated input (user can specify wave front error)
-            adc = 0; % zenith angle for ads 0-60 in steps of 5
-            fiberpos = [0,0,0]; % global position offset in microns (x,y,z)
+            
+            adc = 45; % zenith angle for adc 0-60 in steps of 5
+            
+            fiberpos = [4/7,4/7,13]; % global position offset in microns (x,y,z)
+            
             dof = 0; % depth of focus (not sure if used yet)
+            
             bandPass = 965:1305; % typical bandpass for fiber coupling
+            
+            %--------------------%
+            % Create fiber object
+            %--------------------%
+            
             smfLink = FiberLink(wfef,adc,fiberpos,dof,strehlR,bandPass);
             
-            % indlcue all fiber coupling losses (Strehl ratio, mismatch,
+            % indclude all fiber coupling losses (Strehl ratio, mismatch,
             % adc, fiber offsets etc) specLink is for spectrograph path
             
-            %multiply the star by fiber throughput
-            throughputGrid = Simulation.resampleToGrid(smfLink.specLink(:,1)*1e-3,smfLink.specLink(:,2),spectral_cell{ii}(:,1));
-            spectral_cell{ii}(:,2) = spectral_cell{ii}(:,2).*throughputGrid;
+            %----------------------%
+            % Combine fiber object!
+            %----------------------%
+            
+            throughputGrid = Simulation.resampleToGrid(smfLink.specLink(:,1)*1e-3,smfLink.specLink(:,2),spectral_cell{ii}(:,1)); 
+            
+            spectral_cell{ii}(:,2) = spectral_cell{ii}(:,2).*throughputGrid; %multiply the star by fiber throughput
             
             %record throughput progression
             new_y = Simulation.resampleToGrid(smfLink.specLink(:,1),smfLink.specLink(:,2),tputProg{1,end}(:,1));
@@ -251,20 +423,30 @@ for ii = tracenum
             tempTput(:,2) = new_y .* tputProg{1,end}(:,2);
             
             %[tempTput] = Simulation.addSpecThroughput(,spectrograph.finalThroughput,nOrders);
+            
+            %-------------------------%
+            % Update useful parameters
+            %-------------------------%
             smfCell{1} = tempTput;
             smfCell{2,1} = smfLink.name;
             tputProg = [tputProg smfCell];
+            
             clear specCell tempTput new_y
+            
             fprintf('%s \n',char(hex2dec('2713')))
-
+            
         end
-
+    
+    %--------------------%
+    % Calibration sources
+    %--------------------%    
+        
     elseif strcmp(source{ii}.name,'etalon')
-
+        
         spectral_cell{ii} = [etalon.wavelength etalon.counts];
         tputProg{1,1} = [etalon.wavelength*1e3,ones(size(etalon.counts))];
         tputProg{2,1} = 'EtalonOnes';
-    
+        
     elseif strcmp(source{ii}.name,'flat')
         
         spectral_cell{ii} = [flat.wavelength flat.counts];
@@ -289,7 +471,12 @@ for ii = tracenum
         end
         
     end
-   
+    
+    
+    %--------------------%
+    % Image simulation 
+    %--------------------%
+    
     if strcmp(SpecOrImager,'Imager')
         
         % trim wavelength band to instrument band or user input
@@ -303,44 +490,78 @@ for ii = tracenum
         
         %total = (max(Bandpass(1,:)*1000)-min(Bandpass(1,:))*1000);
         %IntTrans = trapz(tputProg{1,3}(:,1),tputProg{1,3}(:,2))/total;
-        
+
         %Simulate a frame
         counts = simulation.totalCounts;
         pixelpitch = imagerComponents(1,end).pixelPitch;
         dimensions = imagerComponents(1,end).detectorDimensions;
         psf = imagerComponents(1,end).psf;
         FR = 1;
-        [frame] = Simulation.simulateImager(psf,dimensions,pixelpitch,counts/FR);
-        % Don't need to go any further for imagers.
+        %         lbt.progressPlot
+        %         lbti.progressPlot
+        %         fiber.progressPlot
+        %         simulation.ProgressionPlot(tputProg)
+        [frame] = Simulation.simulateImager(psf,dimensions,pixelpitch,counts/FR); % currently uses gaussian beam but should use FT code for PSF generation.
+        fprintf('writing detector face to a fits file...')
+        save ImageArray frame
+        simulation.WriteFits(fitsname,frame,headerinfo)
+        fprintf('%s \n',char(hex2dec('2713')))
         
-        clear nOrders ii order_coeff ret scale cheby chebs tracenum wave_coeff p1 parflag SpecOrImager total spectral_cell
-        return
+        %Don't need to go any further for imagers.
+        %clear nOrders ii order_coeff ret scale cheby chebs tracenum wave_coeff p1 parflag SpecOrImager total spectral_cell
+        
     end
     
-        % cross disperse spectrum into nOrders orders, trim down wavelengths
+    
+    %--------------------%
+    % Spectrum simulation
+    %--------------------%
+    
+    % cross disperse spectrum into nOrders orders, trim down wavelengths
+    spectral_cell{ii} = Simulation.Xdisperse(spectral_cell{ii},nOrders,wave_coeff);
+    
+    if any(strcmp('spectrograph', source{ii}.throughput)) == 1
         
-        spectral_cell{ii} = Simulation.Xdisperse(spectral_cell{ii},nOrders,wave_coeff);
+        %----------------------%
+        % Finalize throughput 
+        %----------------------%
         
-        if any(strcmp('spectrograph', source{ii}.throughput)) == 1
+        if (source{ii}.tput_flag) == 0 % if thoughput is on
             
-            % include throughput of spectrograph.
+            for jj = 1:size(spectrograph.finalThroughput{1},2)
+                
+                spectrograph.finalThroughput{1}(:,jj) = ones(size(spectrograph.finalThroughput{1}(:,jj)));
+                
+            end
             
             spectral_cell{ii} = Simulation.addSpecThroughput(spectral_cell{ii},spectrograph.finalThroughput,nOrders);
             
-            for nn = 1:nOrders
-                new_y = Simulation.resampleToGrid(spectrograph.finalThroughput{2}(:,nn),spectrograph.finalThroughput{1}(:,nn),tputProg{1,end}(:,1));
-                tempTput{1}(:,nn) = tputProg{1,end}(:,1);
-                tempTput{2}(:,nn) = new_y .* tputProg{1,end}(:,2);
-            end
+        else                          % if thoughput is off
             
-            %[tempTput] = Simulation.addSpecThroughput(,spectrograph.finalThroughput,nOrders);
-            specCell{1} = tempTput;
-            specCell{2,1} = spectrograph.name;
-            tputProg = [tputProg specCell];
-            clear specCell tempTput new_y tputProg
+            spectral_cell{ii} = Simulation.addSpecThroughput(spectral_cell{ii},spectrograph.finalThroughput,nOrders);
             
         end
-end  
+        
+        %----------------------%
+        % Throughput progession
+        %----------------------%
+        
+        for nn = 1:nOrders
+            new_y = Simulation.resampleToGrid(spectrograph.finalThroughput{2}(:,nn),spectrograph.finalThroughput{1}(:,nn),tputProg{1,end}(:,1));
+            
+            tempTput{1}(:,nn) = tputProg{1,end}(:,1);
+            
+            tempTput{2}(:,nn) = new_y .* tputProg{1,end}(:,2);
+        end
+        
+        %[tempTput] = Simulation.addSpecThroughput(,spectrograph.finalThroughput,nOrders);
+        specCell{1} = tempTput;
+        specCell{2,1} = spectrograph.name;
+        tputProg = [tputProg specCell];
+        clear specCell tempTput new_y tputProg
+        
+    end
+end
 
 % At this point you have a spectral_cell of {trace}{order}(wavelength,counts)
 
@@ -350,7 +571,9 @@ fprintf('-----\nclipping spectrum to detector...\n')
 for jj = tracenum
     
     fprintf('trace %i \n',jj)
+    
     if parallelInfo{2} == true
+        
         parallel_scale = simulation.scale;
         parallel_cell = spectral_cell{jj};
         
@@ -358,8 +581,8 @@ for jj = tracenum
             
             fprintf('working on order %i... ',ii)
             
-            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(parallel_cell{1}(:,ii),parallel_cell{2}(:,ii),wave_coeff(ii,:,jj),wfe,parallel_scale);
-            detector(:,:,ii,jj) = Simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
+            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(parallel_cell{1}(:,ii),parallel_cell{2}(:,ii),wave_coeff(ii,:,jj),wfe,parallel_scale,ii);
+            detector(:,:,ii,jj) = simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
             fprintf('%s \n',char(hex2dec('2713')))
             
         end
@@ -370,8 +593,8 @@ for jj = tracenum
             
             fprintf('working on order %i... ',ii)
             
-            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(spectral_cell{jj}{1}(:,ii),spectral_cell{jj}{2}(:,ii),wave_coeff(ii,:,jj),wfe,simulation.scale);
-            detector(:,:,ii,jj) = Simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
+            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(spectral_cell{jj}{1}(:,ii),spectral_cell{jj}{2}(:,ii),wave_coeff(ii,:,jj),wfe,simulation.scale,ii);
+            detector(:,:,ii,jj) = simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
             fprintf('%s \n',char(hex2dec('2713')))
             
         end

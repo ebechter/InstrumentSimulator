@@ -14,7 +14,7 @@ classdef Etalon < Spectra
     end
     
     methods
-        function [obj] = Etalon(scale,FSR, R1, R2, rv, type)
+        function [obj] = Etalon(scale,rv,FSR, R1, R2, type)
             %% Pre Initialization %%
             % Any code not using output argument (obj)
             if nargin == 0
@@ -33,6 +33,12 @@ classdef Etalon < Spectra
                 R2 = 0.93;
                 rv = 0;
                 type = 'default';
+            
+            elseif nargin == 2
+                FSR = 10;
+                R1 = 0.93;
+                R2 = 0.93;
+                type = 'default';
                 
             elseif nargin ==5
                 
@@ -50,7 +56,7 @@ classdef Etalon < Spectra
             
             if rv ~=0
                 obj.rv = rv;
-                obj.wavelength = obj.dopplerShift;
+                obj.wavelength = obj.dopplerShift(obj.wavelength,obj.rv);
             end
         end
         

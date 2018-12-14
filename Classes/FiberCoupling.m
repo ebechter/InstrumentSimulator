@@ -1,4 +1,4 @@
-classdef FiberCoupling
+classdef FiberCoupling 
     properties
         %Inputs to system
         Wavelength
@@ -52,7 +52,7 @@ classdef FiberCoupling
             if nargin == 0
                 % Provide values for superclass constructor
                 % and initialize other inputs
-                obj.WFE = [0,1,0,0,0,0,0,0]; % Pupil Zernike amplitudes piston, xtilt, ytilt, etc...
+                obj.WFE = [0,0,0,0,0,0,0,0]; % Pupil Zernike amplitudes piston, xtilt, ytilt, etc...
                 rms_scale = [1,1/2,1/2,1/sqrt(3),1/sqrt(6),1/sqrt(6),1/sqrt(8),1/sqrt(8)];
                 obj.RMS = obj.WFE.*rms_scale;
                 obj.ADC = 0; %Choose values from 0-60 in steps of 5 for the zenith angle.(This is translated as an offset fiber pos rather than beam position for computational ease)
@@ -60,17 +60,20 @@ classdef FiberCoupling
                 obj.DoF = 0; %Polychromatic depth of focus in microns
                 
             else
+                
                 obj.WFE = wfe; % Pupil Zernike amplitudes piston, xtilt, ytilt, etc...
                 rms_scale = [1,1/2,1/2,1/sqrt(3),1/sqrt(6),1/sqrt(6),1/sqrt(8),1/sqrt(8)];
                 obj.RMS = obj.WFE.*rms_scale;                
-                obj.ADC = adc; %Choose values from 0-60 in steps of 5 for the zenith angle.(This is translated as an offset fiber pos rather than beam position for computational ease)
+                obj.ADC = round(adc ./ 5) * 5; %Choose values from 0-60 in steps of 5 for the zenith angle.(This is translated as an offset fiber pos rather than beam position for computational ease)
                 obj.FiberPos = fiberpos; % global position offset in microns (x,y,z)
                 obj.DoF = dof; %Polychromatic depth of focus in microns
+                
             end
             obj.Wavelength =flipud([1.29882 1.28752 1.27643 1.26552 1.25479 1.24425 1.23388 1.22368 1.21365 1.20378 1.19408 ...
                 1.18452 1.17512 1.16587 1.15676 1.14779 1.13896 1.13027 1.12171 1.11327 1.10497 1.09678 1.08872 1.08077 ...
                 1.07294 1.06522 1.05761 1.05011 1.04271 1.03542 1.02823 1.02114 1.01415 1.00725 1.00044 9.9373E-001 ...
                 9.8710E-001 9.8057E-1 9.7411E-1]');
+            
             
             obj = PrepareFiberOffsets(obj);
             obj = CreatePupilPlane(obj);
@@ -79,64 +82,78 @@ classdef FiberCoupling
         end
         function [obj] = PrepareFiberOffsets(obj)
             %Description: uses ADC beam offsets in the focal plane from
-            %zemax to offset the fiber. Also calculates the MFD at each
+            %zemax to offset the fiber and calculates the MFD at each
             %wavelength sample. 
+                
+            %---------------%
+            % ADC offsets
+            %---------------%
             
-            %Offset = 1e-6*(linspace(-(obj.ADC),(obj.ADC),length(obj.Wavelength)));
-            %replace offset with ADC fitted curves. Use the obj.wavelength
-            %vector to evaluate the curves.
-            pathprefix = pwd;
-            adcfile = [pathprefix '/RefFiles/ADC/ADC_coeff_radial.mat'];
-            %adcfile = [pathprefix '/RefFiles/ADC/ADC_coeff.mat'];
+            current_path = pwd;
+            if current_path(1:7) == 'Volumes'
+                
+                adcfile = 'Volumes/Software/Simulator/RefFiles/ADC/ADC_coeff_radial.mat';
+            else
+                
+                adcfile = [current_path(1:2) '\Simulator\RefFiles\ADC\ADC_coeff_radial.mat'];
+            end            
+            
             load(adcfile) %ADC beam offsets from 0-60 in steps of 5 for the zenith angle.
-            ii = (obj.ADC./5)+1; %match the zenith angle to the index of polynomial fit coefficients in po
+           
+            ind = (obj.ADC./5)+1; %match the zenith angle to the index of polynomial fit coefficients in po (horrible hard coded method that will break with new ADC info)
+            
             x1 = obj.Wavelength;
-            y1 = polyval(p0{ii},x1);
-            Offset = y1*1e-6;
-            lambda = obj.Wavelength;
             
-            for ii = 1:size(obj.Wavelength,1)
-                [obj.MFD(ii,1)]=SMF_MFD(lambda(ii)); %Inputs = wavelength in mircons %MFD is in intensity space
+            for ii= 1:length(ind)
+                y1(:,ii) = polyval(p0{ind(ii)},x1);
             end
+            Offset = y1.*1e-6;
+
             obj.BeamPos = Offset; % lateral offset of the fiber translates to phase in pupil plane
-        end
+            
+            %---------------%
+            % Fiber MFD
+            %---------------%
+                        
+            [obj.MFD]=SMF_MFD(obj.Wavelength); %Inputs = wavelength in mircons %MFD is in intensity space
+            
+            
+        end        
         function [obj] = CreatePupilPlane(obj)
-            %Description: Calculates the pupil based on the telescope
-            %parameters with a phase term. Also calculates the pupil based
-            %on the focal length of the fiber lens pair by backwards
-            %propagating. The fiber position error (from not centering the
-            %stage, and ADC offsets are incorporated in fiber pupil plane. 
+            %Description: Calculates the telescope pupil based on the telescope
+            %parameters with a phase term. 
             
-            %Break out Zernike amplitues into seperate amplitudes
-            Afx = obj.FiberPos(1,1);
-            Afy = obj.FiberPos(1,2);
+            %-----------------------%
+            % Zernike Phase map
+            %-----------------------%
             
-            %Zernike phase map
-            W = 0; % 
+            W = 0; %phase (in radians)
+            
             for z = 1:length(obj.WFE)
                 Z = ZernikeCalc(z,1); % use ZernikeCalc to produce normalized zernike surface
-                Z = padarray(Z,[400,400]);% increase padding on output;
-                Z = Z./(max(max(Z)));
-                Ab = obj.WFE(z)*Z;
-                W = W+Ab;
+                Z = padarray(Z,[100,100]);% increase padding on output;
+                Z = Z./(max(max(Z))); % make sure zernike surface is normalized
+                Ab = obj.WFE(z)*Z; % aberrated phase in radains
+                W = W+Ab; % add aberrations together 
             end
-            
-            %Constants (we should make this accept variables, or use
-            %defaults)
+                        
+            %-------------------------%
+            % Optical system constants
+            %-------------------------%
             
             N = size(W,1);% variable 7/25/17 Sampling points
             L = 50e-3;% length of grid in meters
             dl = L/N; %Pupil plane grid spacing (meters)
             D = 5.8e-3; % Pupil diameter
-               
-            k = 2*pi./(1e-6*obj.Wavelength); %wavenumber
             alpha = 0.11; % secondary blocking fraction
             f = 24.5e-3;% (20.8e-3) focal length of lens 
             d = f; %distance before the lens
             obj.gridparams = [dl,f,d];
                         
-            %..................
-            %Pupil definition
+            %--------------------%
+            % Pupil definition
+            %--------------------%
+            
             [x1,y1] = meshgrid((-N/2+0.5:N/2-0.5)*dl); %grid in pupil plane
             obj.PPgrid(:,:,1) = x1;
             obj.PPgrid(:,:,2) = y1;
@@ -147,79 +164,138 @@ classdef FiberCoupling
             Uin1 = circ(Pupil_cenx,Pupil_ceny,D);%outer circle
             Uin2 = circ(Pupil_cenx,Pupil_ceny,D*alpha);%inner circle
             pupil = Uin1-Uin2;%total pupil plance image
-            W =pupil.*W;
+            W = pupil.*W;
             obj.Pupil = pupil.*exp(1i*W); %Complex Pupil plane with phase term
             
-            for ii = 1:length (obj.Wavelength)
-            %Propogate the pupil plane to focal plane (electric fields) at
-            %all wavelengths
-            [x2,y2,obj.PSF(:,:,ii)] = lens_in_front_ft(obj.Pupil(:,:,1),1e-6*obj.Wavelength(ii),dl,f,d);
-            obj.FPgridx(:,:,ii) = x2;
-            obj.FPgridy(:,:,ii) = y2;
-            [testPupil(:,:,ii)] = lens_in_front_ift(obj.PSF(:,:,ii),1e-6*obj.Wavelength(ii,1),obj.gridparams(1,1),obj.gridparams(1,2)); %transform PSF back to pupil plane
+            %-----------------------%
+            % Image Plane definition
+            %-----------------------%
+            
+            parPupil = obj.Pupil(:,:,1);
+            parWave = obj.Wavelength;
+            
+            
+            for ii = 1:length(obj.Wavelength)
+                %Propogate the pupil plane to focal plane (electric fields) at
+                %all wavelengths
+                [x2(:,:,ii),y2(:,:,ii),parPSF(:,:,ii)] = lens_in_front_ft(parPupil,1e-6*parWave(ii),dl,f,d);
+%                 [testPupil(:,:,ii)] = lens_in_front_ift(obj.PSF(:,:,ii),1e-6*obj.Wavelength(ii,1),obj.gridparams(1,1),obj.gridparams(1,2)); %transform PSF back to pupil plane
             end
+            
+            obj.PSF = parPSF;
+            obj.FPgridx = x2;
+            obj.FPgridy = y2;
             %F number
             obj.F = f/D;
         end
         function [obj] = CreateFiberPSF(obj)
-            %Fiber definition
-            mfd = obj.MFD;%electric field beam waist is sqrt(2) larger than I field
-            waist = 1e-6*mfd/2;  %and is defined as 1/2 the e2 diameter
-            w = waist;
-            mu(:,1) = obj.BeamPos(:,1)+1e-6*obj.FiberPos(1,1);
-            mu(:,2) = zeros(length(obj.BeamPos),1)+1e-6*obj.FiberPos(1,2);
+            %Calculates the electric field in the pupil by backwards
+            %propagating from the fiber. The fiber position error from not
+            %centering the stage, and ADC offsets are incorporated in
+            %electric field of the fiber pupil plane.
+            
+            %-------------------%
+            % Fiber definitions
+            %-------------------%
+            N = size(obj.BeamPos,2); % samples
+            
+            M = size(obj.BeamPos,1); % wavelegnth
+            
+            mfd = obj.MFD;% electric field beam waist is sqrt(2) larger than I field
+            
+            waist = 1e-6*mfd/2;  %and is defined as 1/2 the 1/e^2 diameter
+            
+            w = waist; % beam waist
+            
+            mu(:,:,1) = obj.BeamPos(:,1)+1e-6.*repmat(obj.FiberPos(:,1)',M,1);
+            
+            mu(:,:,2) = zeros([M,N,1])+1e-6.*repmat(obj.FiberPos(:,2)',M,1);
             
             %Fiber defocus
             focus_shift = 1e-6*linspace(-obj.DoF,obj.DoF,length(obj.Wavelength))';
-            focus = focus_shift+1e-6*obj.FiberPos(1,3);
+            focus = repmat(focus_shift,1,N)+1e-6.*repmat(obj.FiberPos(:,3)',M,1);
             z0 = pi*(w.^2)./(1e-6*obj.Wavelength);%calculate the rayleigh range
-            wz = w.*(sqrt(1+(focus./z0).^2));%resize the beam waist to correspond to the DOF
+            wz = w.*(sqrt(1+(focus./repmat(z0,1,N)).^2));%resize the beam waist to correspond to the DOF
+            
+            
+            
+            parGridx = obj.FPgridx;
+            parGridy = obj.FPgridy;
+            parWave = obj.Wavelength;
+            parParams = obj.gridparams;
+            
+            fpupil = zeros([size(parGridx),N]);
             
             for ii = 1:size(obj.Wavelength,1)
-            %SMF Focal Plane
-            fun = @(x,y)exp(-((x-mu(ii,1))./wz(ii)).^2).*exp(-((y-mu(ii,2))./wz(ii)).^2); %generate analytic 2D Gaussian function for Fiber
-            obj.FiberPSF(:,:,ii) = fun(obj.FPgridx(:,:,ii),obj.FPgridy(:,:,ii)); %x2,y2 is grid in focal plane
-            %SMF Pupil
-            [fpupil(:,:,ii)] = lens_in_front_ift(obj.FiberPSF(:,:,ii),1e-6*obj.Wavelength(ii,1),obj.gridparams(1,1),obj.gridparams(1,2)); %transform fiber to pupil plane
+                
+                %-------------------%
+                % Focal Plane
+                %-------------------%
+               
+                fun = @(x,y)exp(-((x-mu(ii,:,1))./wz(ii,:)).^2).*exp(-((y-mu(ii,:,2))./wz(ii,:)).^2); %generate analytic 2D Gaussian function for Fiber
+                tt = fun(reshape(parGridx(:,:,ii),size(parGridx(:,:,ii),1)*size(parGridx(:,:,ii),2),1)...
+                    ,reshape(parGridy(:,:,ii),size(parGridy(:,:,ii),1)*size(parGridy(:,:,ii),2),1)); %x2,y2 is grid in focal plane
+                % reshape out
+                FiberPSF = reshape(tt,[size(parGridy(:,:,ii)),N]);
+                 
+%                  
+%                 temp = reshape(obj.FPgridx(:,:,ii),size(obj.FPgridx(:,:,ii),1)*size(obj.FPgridx(:,:,ii),2),1);
+%                 temp2 = repmat(temp,[1,150]);
+%                 temp3 = temp2-mu(ii,:,1);
+                
+                clear tt
+                
+                %-------------------%
+                % Pupil Plane
+                %-------------------%
+                [fpupil(:,:,ii,:)] = lens_in_front_ift(FiberPSF,1e-6*parWave(ii,1),parParams(1,1),parParams(1,2)); %transform fiber to pupil plane
+            
             end
+            
+            obj.FiberPSF = FiberPSF;
             obj.FPupil = fpupil;
             
         end
         
         function [obj] = CoupleSMF(obj)
+            
+            Z1 = obj.Pupil.*conj(obj.Pupil);
+            x = obj.PPgrid(1,:,1);
+            y = obj.PPgrid(:,1,2);
+            
+            D111 = trapz(y,trapz(x,Z1,2));
             for ii = 1:size(obj.Wavelength,1)
-            Product = (conj(obj.FPupil(:,:,ii))).*(obj.Pupil);    
+            Product = (conj(squeeze(obj.FPupil(:,:,ii,:)))).*(obj.Pupil);    
             
             %3 methods for doing this math...
             
             %Method 1 use 2d trapezoidal method 
-            x = obj.PPgrid(1,:,1);
-            y = obj.PPgrid(:,1,2);
+
             Z0 = Product;
-            Z1 =obj.Pupil.*conj(obj.Pupil); 
-            Z2 =obj.FPupil(:,:,ii).*conj(obj.FPupil(:,:,ii));
-            D111=trapz(y,trapz(x,Z1,2));
-            D222= trapz(y,trapz(x,Z2,2));
+             
+            Z2 = obj.FPupil(:,:,ii,:).*conj(obj.FPupil(:,:,ii,:));
+            
+            D222 = trapz(y,trapz(x,Z2,2));
             num3 = trapz(y,trapz(x,Z0,2));
-            rho3 = abs(num3./(sqrt(D111)*sqrt(D222))).^2;
+            rho3 = abs(squeeze(num3)./(sqrt(D111)*sqrt(squeeze(D222)))).^2;
             
             %Method 2 use abs value squared instead of braket on single
             %matrix terms (I think that means the same thing) 
-            num = abs(sum(sum(Product))).^2;
-            D1 = abs(obj.Pupil).^2;
-            D2 = abs(obj.FPupil(:,:,ii)).^2;
-            den = abs(sum(sum(D1))*sum(sum(D2)));
-            rho1 = (squeeze(num./den));
-            
-            %Method 3
-            num2 = sum(sum(Product));
-            D11 = (sum(sum(obj.Pupil.*conj(obj.Pupil))));
-            D22 = (sum(sum(obj.FPupil(:,:,ii).*conj(obj.FPupil(:,:,ii)))));
-            den2 = sqrt(D11)*sqrt(D22);
-            rho2 = squeeze(abs(num2./den2).^2);
+%             num = abs(sum(sum(Product))).^2;
+%             D1 = abs(obj.Pupil).^2;
+%             D2 = abs(obj.FPupil(:,:,ii)).^2;
+%             den = abs(sum(sum(D1))*sum(sum(D2)));
+%             rho1 = (squeeze(num./den));
+%             
+%             %Method 3
+%             num2 = sum(sum(Product));
+%             D11 = (sum(sum(obj.Pupil.*conj(obj.Pupil))));
+%             D22 = (sum(sum(obj.FPupil(:,:,ii).*conj(obj.FPupil(:,:,ii)))));
+%             den2 = sqrt(D11)*sqrt(D22);
+%             rho2 = squeeze(abs(num2./den2).^2);
             
             %Outputs
-            obj.Rho(ii) = rho3;
+            obj.Rho(:,ii) = rho3;
             end
         end
     end
@@ -237,7 +313,7 @@ function [MFD]=SMF_MFD(lambda)
 NA=0.136; %Numerical aperture of the fiber
 a=4.95/2; % physical core radius of the fiber in microns
 V=(2*pi*a*NA)./lambda; %V number
-w =a.*(0.65+1.619/(V^(3/2))+2.879/(V^6)-(0.016+1.561/(V^7))); % petermann_II MFR formula
+w =a.*(0.65+1.619./(V.^(3/2))+2.879./(V.^6)-(0.016+1.561./(V.^7))); % petermann_II MFR formula
 MFD= w*2; % MFD = MFR*2 MFD = e^2 diameter
 end
 %Create a circle
@@ -258,12 +334,14 @@ end
 %FT with lens in front of the plane
 function[Uin] = lens_in_front_ift(Uout,wvl,dl,f)
 
+Uout= squeeze(Uout);
 N = size(Uout,1);
 delta_f = 1/(N*dl);
-k = 2*pi/wvl;
+% k = 2*pi/wvl;
 Uin = (1i*wvl*f).*ift2(Uout,delta_f);
 
 end
+
 function[x2,y2,Uout] = lens_in_front_ft(Uin,wvl,dl,f,d)
 
 N = size(Uin,1);
