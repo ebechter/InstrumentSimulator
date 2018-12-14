@@ -1,6 +1,6 @@
 clear; clc; %close all
 
-
+This is test
 % Start from the correct path
 current_path = pwd; 
 if strcmp(current_path(end-8:end),'Simulator')~=1
