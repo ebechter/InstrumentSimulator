@@ -2,3 +2,6 @@
 *.fits
 /RefFiles/Atmosphere/
 backupArray.mat
+*.png
+*.pdf
+*.mp4
