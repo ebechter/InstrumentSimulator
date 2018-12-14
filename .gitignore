@@ -8,3 +8,5 @@ backupArray.mat
 *.fig
 /FiberCouplingStudy/Output/
 PersistenceStudy\.zip
+
+\.DS_Store

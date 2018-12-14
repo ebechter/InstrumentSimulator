@@ -16,7 +16,6 @@ classdef Simulation
                 obj.scale = scale;
             end
         end
-
     end
     
     methods(Static)
@@ -508,11 +507,14 @@ classdef Simulation
         function [SR_interp] = calculateStrehlRatio(aoType,seeing,counts,zenith)
             
             current_path = pwd;
-            if current_path(1:7) == 'Volumes'
+            if strcmp(current_path(1:7) , 'Volumes')==1
                 
                 strehl_dir = 'Volumes/Software/Simulator/RefFiles/AO/';
-            else
                 
+            elseif strcmp(current_path(2:4),'afs')==1
+                
+                strehl_dir = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/AO/';
+            else
                 strehl_dir = [current_path(1:2) '\Simulator\RefFiles\AO\'];
             end
             

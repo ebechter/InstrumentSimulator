@@ -90,11 +90,13 @@ classdef FiberCoupling
             %---------------%
             
             current_path = pwd;
-            if current_path(1:7) == 'Volumes'
+            if strcmp(current_path(1:7),'Volumes') ==1 
                 
                 adcfile = 'Volumes/Software/Simulator/RefFiles/ADC/ADC_coeff_radial.mat';
-            else
                 
+            elseif strcmp(current_path(2:4),'afs')==1
+                adcfile = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/ADC/ADC_coeff_radial.mat';
+            else
                 adcfile = [current_path(1:2) '\Simulator\RefFiles\ADC\ADC_coeff_radial.mat'];
             end            
             
@@ -511,10 +513,10 @@ function [output1 output2] = ZernikeCalc( ZernikeList, Zdata, mask, ...
 %|INPUT PARAM |APERTURE |SOFTWARE|ORDER &   |
 %|ZernikeDef  | SHAPE   |        | RANGE    |
 %|------------|---------|--------|----------|
-%|'B&W',      |Circle   |CODE V  | (n, ±m), |
+%|'B&W',      |Circle   |CODE V  | (n, ï¿½m), |
 %|'STANDARD'  |         |        | j=1...   |
 %|------------|---------|--------|----------|
-%|'MAHAJAN',  |Circle   |ZEMAX   | (n, ±m), |
+%|'MAHAJAN',  |Circle   |ZEMAX   | (n, ï¿½m), |
 %|'NOLL'      |         |        | j=1...   |
 %|------------|---------|--------|----------|
 %|'FRINGE'    |Circle   |CODE V, | j=1...37 |
