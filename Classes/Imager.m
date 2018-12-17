@@ -174,8 +174,8 @@ classdef Imager < Instrument
             end            
             
             current_path = pwd;
-            if strcmp(current_path(1:7),'Volumes')==1
-               curveDirectory = 'Volumes/Software/Simulator/RefFiles/Curves/Instrument/';
+            if strcmp(current_path(2:8),'Volumes')==1
+               curveDirectory = '/Volumes/Software/Simulator/RefFiles/Curves/Instrument/';
 
 
             elseif strcmp(current_path(2:4),'afs')==1

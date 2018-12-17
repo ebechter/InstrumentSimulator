@@ -5,8 +5,8 @@ clear; clc; %close all
 current_path = pwd; 
 if strcmp(current_path(end-8:end),'Simulator')~=1
     
-    if strcmp(current_path(1:7),'Volumes')==1
-        cd 'Volumes/Software/Simulator'
+    if strcmp(current_path(2:8),'Volumes')==1
+        cd '/Volumes/Software/Simulator/'
     
     elseif strcmp(current_path(2:4),'afs')==1
         cd '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/'
@@ -26,7 +26,7 @@ tic
 
 parflag = true; %true or false
 
-numworkers =4;
+numworkers =2;
 
 parallelInfo = {numworkers,parflag};
 

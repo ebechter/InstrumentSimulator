@@ -64,10 +64,10 @@ classdef AO < Instrument
             end
             
             current_path = pwd;
-            if strcmp(current_path(1:7),'Volumes')==1
+            if strcmp(current_path(2:8),'Volumes')==1
                 
-                curveDirectory = 'Volumes/Software/Simulator/RefFiles/Curves/Instrument/';
-                load('Volumes/Software/Simulator/polycoeffs2.mat')
+                curveDirectory = '/Volumes/Software/Simulator/RefFiles/Curves/Instrument/';
+                load('/Volumes/Software/Simulator/polycoeffs2.mat')
             elseif strcmp(current_path(2:4),'afs')==1
                 curveDirectory = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/Curves/Instrument/';
                 load('/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/polycoeffs2.mat')

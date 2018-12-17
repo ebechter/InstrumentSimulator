@@ -32,10 +32,10 @@ classdef Atmosphere
             %----------------------------%
             
             current_path = pwd;
-            if strcmp(current_path(1:7),'Volumes')==1
+            if strcmp(current_path(2:8),'Volumes')==1
             
-                telluric_path = 'Volumes/Software/Simulator/RefFiles/Atmosphere/telluric_200.mat';
-                skyback_path = 'Volumes/Software/Simulator/RefFiles/SkyBackground/SkyBackground.mat';
+                telluric_path = '/Volumes/Software/Simulator/RefFiles/Atmosphere/telluric_200.mat';
+                skyback_path = '/Volumes/Software/Simulator/RefFiles/SkyBackground/SkyBackground.mat';
             
             elseif strcmp(current_path(2:4),'afs')==1
                 telluric_path = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/Atmosphere/telluric_200.mat';

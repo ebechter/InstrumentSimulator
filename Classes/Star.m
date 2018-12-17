@@ -32,10 +32,10 @@ classdef Star < Spectra
             global starfile
             
             current_path = pwd;
-            if strcmp(current_path(1:7),'Volumes')==1
+            if strcmp(current_path(2:8),'Volumes')==1
                 
-                starfile = 'Volumes/Software/Simulator/RefFiles/Star/fullpecautmamajek.xlsx';
-                allardpath = 'Volumes/Software/Spectral_Catalogs/FAllard/CIFIST6b_trimmed_resampled/';
+                starfile = '/Volumes/Software/Simulator/RefFiles/Star/fullpecautmamajek.xlsx';
+                allardpath = '/Volumes/Software/Spectral_Catalogs/FAllard/CIFIST6b_trimmed_resampled/';
                 
             elseif strcmp(current_path(2:4),'afs')==1
                 starfile = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/Star/fullpecautmamajek.xlsx';

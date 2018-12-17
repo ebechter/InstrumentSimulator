@@ -90,9 +90,9 @@ classdef FiberCoupling
             %---------------%
             
             current_path = pwd;
-            if strcmp(current_path(1:7),'Volumes') ==1 
+            if strcmp(current_path(2:8),'Volumes') ==1 
                 
-                adcfile = 'Volumes/Software/Simulator/RefFiles/ADC/ADC_coeff_radial.mat';
+                adcfile = '/Volumes/Software/Simulator/RefFiles/ADC/ADC_coeff_radial.mat';
                 
             elseif strcmp(current_path(2:4),'afs')==1
                 adcfile = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/ADC/ADC_coeff_radial.mat';

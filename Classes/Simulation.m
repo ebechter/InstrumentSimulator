@@ -507,9 +507,9 @@ classdef Simulation
         function [SR_interp] = calculateStrehlRatio(aoType,seeing,counts,zenith)
             
             current_path = pwd;
-            if strcmp(current_path(1:7) , 'Volumes')==1
+            if strcmp(current_path(2:8) , 'Volumes')==1
                 
-                strehl_dir = 'Volumes/Software/Simulator/RefFiles/AO/';
+                strehl_dir = '/Volumes/Software/Simulator/RefFiles/AO/';
                 
             elseif strcmp(current_path(2:4),'afs')==1
                 
