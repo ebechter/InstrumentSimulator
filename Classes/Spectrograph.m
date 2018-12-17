@@ -8,7 +8,7 @@ classdef Spectrograph < Instrument
     
     methods
         
-        function [obj] = Spectrograph(type,polarization)
+        function [obj] = Spectrograph(polarization,type)
             %% Pre Initialization %%
             % Any code not using output argument (obj)
             %Need to define an optical model structure and rules.
@@ -22,7 +22,7 @@ classdef Spectrograph < Instrument
                 
             elseif nargin == 1
                 
-                type = 'Silicon';
+                type = 'Richardson';
                 polarization = [0,0,0]; % degree of  polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
                 
             end
@@ -57,7 +57,7 @@ classdef Spectrograph < Instrument
                 opticalModel{8} = struct('name','Cam M3','type','conic','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',0);
                 opticalModel{9} = struct('name','H4RG','type','detector','coatingName','detH4RG','number',1,'angle',[],'efficiency',[],'polarization',0);
                 opticalModel{10} = struct('name','R6Grating','type','Grating','coatingName','R6Grating','number',1,'angle','81','efficiency',[],'polarization',0);
-                bandPass = [800,1600];
+                bandPass = [950,1350];
                 
                 
             elseif strcmp(type,'Silicon') == 1
@@ -151,7 +151,7 @@ classdef Spectrograph < Instrument
             peff = GratingEff_new(:,2:40);
             wave = GratingEff_new(:,1);
             wave_s = wave + offset;
-            seff = interp1(wave_s,peff,wave);
+            seff = interp1(wave_s,peff,wave,'linear',0);
             
             %rescale amplitudes
             scale = 1.135;
@@ -168,7 +168,7 @@ classdef Spectrograph < Instrument
         
         function [obj] = Include_Grating(obj)
             GratingEff = obj.grating;
-            for ii = 2:size(GratingEff-3,2) % trying to fix for 36 orders
+            for ii = 2:size(GratingEff,2)-3 % trying to fix for 36 orders
                 y1 = obj.finalThroughput(:,2);
                 x1 = obj.finalThroughput(:,1);
                 y2 = GratingEff(:,ii);
