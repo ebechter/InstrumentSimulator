@@ -44,9 +44,11 @@ runInfo = {version,scale};
 
 sources{1}.name = 'star'; 
 
-sources{1}.atmosphere = 1;
+sources{1}.atmosphere = 0;
 
 sources{1}.throughput = {'lbt','lbti','fiberCh','SMFCoupling','fiberLink','spectrograph'};
+
+sources{1}.throughput = {'lbt','lbti','fiberCh'};%'SMFCoupling','fiberLink','spectrograph'};
 
 sources{1}.AO = 1;  
 
@@ -119,7 +121,7 @@ persistentSource.rv =0;
 
 % Choose between simulating and imager or a spectrograph
 
-SpecOrImager = 'Spectrograph' ; %'Imager' or Spectrograph
+SpecOrImager = 'Imager' ; %'Imager' or Spectrograph
 
 %========== Spectrograph info ===========%
 
@@ -192,7 +194,7 @@ optical.dof = 0; % depth of focus (not sure if used yet)
 pathprefix = pwd;
 
 mag = (7:1:12);
-mag = 9 ;
+mag = 10 ;
 for ii = 1:length(mag)
     
     vmag = mag(ii)+2.831; %M4 type
@@ -201,7 +203,7 @@ for ii = 1:length(mag)
     
     fname = [spType,'_',num2str(vmag)];
     
-    fitsname = [pathprefix,'/Output/TelluricsFDRTest',fname,'.fits'];
+    fitsname = [pathprefix,'/Output/FiberCouplingV2',fname,'.fits'];
     
     headerinfo = {
     'version',version,'version';...
@@ -228,7 +230,9 @@ for ii = 1:length(mag)
     [fiber_inj] = SimulationMainFC(parallelInfo,runInfo,specInfo,fitsname, ...
     optical,starInfo,sources,SpecOrImager,conditions,headerinfo,persistentSource);
     
-    smfname = [pathprefix,'/Output/PhNoiseFDR',fname,'_eta.mat'];
+    smfname = [pathprefix,'/Output/FiberCouplingV2',fname,'_eta.mat'];
+    
+    return
     
     eta.lambda = fiber_inj.bandPass';
     eta.AO = fiber_inj.Strehl;

@@ -1,4 +1,4 @@
-classdef FiberInjection < FiberCoupling
+classdef FiberInjection < FiberCouplingV2
     
     properties
         name
@@ -16,9 +16,15 @@ classdef FiberInjection < FiberCoupling
             %-----------------------%
             % Superclass Constructor
             %-----------------------%
+            wavelength =flipud([1.29882 1.28752 1.27643 1.26552 1.25479 1.24425 1.23388 1.22368 1.21365 1.20378 1.19408 ...
+                1.18452 1.17512 1.16587 1.15676 1.14779 1.13896 1.13027 1.12171 1.11327 1.10497 1.09678 1.08872 1.08077 ...
+                1.07294 1.06522 1.05761 1.05011 1.04271 1.03542 1.02823 1.02114 1.01415 1.00725 1.00044 9.9373E-001 ...
+                9.8710E-001 9.8057E-1 9.7411E-1]');
+            
+            dispersion = true;
             
             %----------Mode Mismatch/ Alignment----------% 
-            obj@FiberCoupling(wfe,adc,fiberpos,dof); % call superclass constructor with specific inputs
+            obj@FiberCouplingV2(wavelength,wfe,adc,fiberpos,dof,dispersion); % call superclass constructor with specific inputs
             
             %----------Assign/ extrapolate parameters----------% 
             obj.name = 'FiberCoupling';

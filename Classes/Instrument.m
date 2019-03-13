@@ -507,6 +507,28 @@ end
 N = min(N,P);
 C = interp1(1:P, viridi, linspace(1,P,N), 'linear');
 end
+function [psf] = opd2psf(pupil,opd,lambda)
 
+P = pupil .* exp(i * 2*pi/lambda * opd);
+
+psf = fftshift(fft2(P));
+
+psf = psf .* conj(psf);
+
+psf = psf ./ sum(psf(:));
+
+end
+function C = circ(N,R)
+C = zeros(N);
+
+[X,Y] = meshgrid(-N/2:N/2-1,-N/2:N/2-1);
+
+X = X+0.5; Y=Y+0.5;
+
+Z = sqrt(X.^2 + Y.^2);
+
+C(Z<R) = 1;
+
+end
 
 
