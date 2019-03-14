@@ -80,9 +80,9 @@ rv = 0;
 units = 'counts';
 
 
-persistentRV = [0:500:5000 7000:2000:1e4 2e4:1e4:3e4];
-persistentRV = [-fliplr(persistentRV(2:end)) persistentRV]; 
-
+% persistentRV = [0:500:5000 7000:2000:1e4 2e4:1e4:3e4];
+% persistentRV = [-fliplr(persistentRV(2:end)) persistentRV]; 
+persistentRV = 0;
 
 persistentSource.name = 'etalon'; 
 persistentSource.atmosphere = 0;
@@ -93,7 +93,7 @@ persistentSource.vmag = 11.8;
 persistentSource.epsilon = 0;
 persistentSource.vsini = 1;
 persistentSource.units = 'counts';
-persistentSource.persistence = 0.1; 
+persistentSource.persistence = 0.000001; 
 
 % 
 % % Source 2  
@@ -148,7 +148,7 @@ headerinfo = {
     };
 
 
-fname = ['PersistentEtalon_0.1_' num2str(ii)];
+fname = ['PersistentEtalon_0.000001_' num2str(ii)];
 fitsname = [pathprefix,'/../Output/Persistence/',fname,'.fits'];
 
 %Call the main script

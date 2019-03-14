@@ -76,8 +76,9 @@ classdef Simulation
             % (i.e. no extrapolation). This was causing strange problems
             % when looking at full throughput curves outside of the
             % artificial cutoffs imposed by the simulator.
+            % Eric changed it back 3/14/19 
             
-            extrap_scalar = 0;% min(y);
+            extrap_scalar = min(y);
             ub = min(x(end,1),x_grid(end,1));
             ind = find(x<=ub,1,'last');
             x_safe = x(1:ind);
@@ -259,12 +260,12 @@ classdef Simulation
             scaleV = interp1([3 3.0561 3.14 3.559 4 5 6]/3,[0.0001 0.1 1/3 0.5833 0.87 1.333 1.75],vertSamp/3,'linear','extrap');
             
 
-            %%% Aberration Map %%% 
+            %% Aberration Map %%% 
 %             cdisp_wfe = linspace(1/16,0,36/2);
-%             cdisp_wfe = [cdisp_wfe fliplr(cdisp_wfe)];
+%             cdisp_wfe = [cdisp_wfe -fliplr(cdisp_wfe)];
 %             
 %             disp_wfe = linspace(1/16,0,length(wavelength)/2);
-%             disp_wfe = [disp_wfe fliplr(disp_wfe)];
+%             disp_wfe = [disp_wfe -fliplr(disp_wfe)];
 %             if rem(length(wavelength),2) ~= 0
 %                 disp_wfe = [disp_wfe disp_wfe(end)];
 %             end
@@ -307,7 +308,7 @@ classdef Simulation
             for ii = 2:length(wavelength)
 
 %                 wfeList{ii} = 2*pi*wfe*(0.97/wavelength(ii));
-                wfe(7) =0;%disp_wfe(ii);
+                wfe(7) = 0;%disp_wfe(ii);
                 wfeList{ii} = 2*pi*wfe;
 
                 PSF(:,:,ii) = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
