@@ -135,8 +135,8 @@ classdef Imager < Instrument
                 
                 
             elseif strcmp(type,'LBTI') == 1
-%                 opticalModel{1} = struct('name','Entrance Window','type','dichroic','coatingName','AlluxaEntWT','number',1,'angle','15','efficiency',[]);
-                opticalModel{1} = struct('name','Entrance Window','type','dichroic','coatingName','LBTI_ZnSeT','number',1,'angle',[],'efficiency',[]);
+                opticalModel{1} = struct('name','Entrance Window','type','dichroic','coatingName','AlluxaEntWT','number',1,'angle','15','efficiency',[]);
+%                 opticalModel{1} = struct('name','Entrance Window','type','dichroic','coatingName','LBTI_ZnSeT','number',1,'angle',[],'efficiency',[]);
                 opticalModel{2} = struct('name','Ellipse Mirror','type','elliptical mirror','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
                 opticalModel{3} = struct('name','Pupil mirrror','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
                 opticalModel{4} = struct('name','Roof mirrror','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);

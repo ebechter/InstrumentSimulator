@@ -67,7 +67,7 @@ epsilon = 0;
 
 vsini = 2.5; %km/s
 
-rv = linspace(-30e3,30e3,3);
+rv = [-30e3,30e3];%linspace(-30e3,30e3,3);
 
 units = 'counts';
 
@@ -195,7 +195,7 @@ pathprefix = pwd;
 
 for ii = 1:length(rv)
     
-    starInfo = {spType,vmag,epsilon,vsini,rv,units};
+    starInfo = {spType,vmag,epsilon,vsini,rv(ii),units};
     headerinfo = {
         'version',version,'version';...
         'footprint',footprint,'spectrograph fpt';...
@@ -211,13 +211,13 @@ for ii = 1:length(rv)
         'SpType',spType,'spec type';...
         'units',units,'units of spectrum';...
         'Vmag', vmag,' ';...
-        'RV', rv,'Injected RV (m/s)';...
+        'RV', rv(ii),'Injected RV (m/s)';...
         'Vsini', vsini,' ';...
         'Tlrcs', sources{1}.atmosphere ,'Are tellurics included 1/0';...
         };
     
     
-    fname = ['TestingThroughputSim' num2str(ii)];
+    fname = ['AberrationMapTestComa' num2str(ii+1)];
     fitsname = [pathprefix,'/',fname,'.fits'];
     
     SimulationMainAB(parallelInfo,runInfo,specInfo,fitsname, ...
