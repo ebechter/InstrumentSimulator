@@ -785,7 +785,7 @@ classdef Simulation
             
             l=legend(handle,labels,'Location','northwest');
             ylim([0 1])
-            xlim([800 1600])
+%             xlim([800 1600])
             ylabel('Throughput')
             xlabel('Wavelength (nm)')
             l.FontSize = 18;

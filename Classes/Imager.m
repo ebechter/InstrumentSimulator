@@ -67,7 +67,7 @@ classdef Imager < Instrument
                 
                 
             elseif strcmp(type,'FIBER') == 1
-
+                
                 opticalModel{1} = struct('name','M1','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
                 opticalModel{2} = struct('name','M2','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
                 opticalModel{3} = struct('name','M3','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
@@ -85,18 +85,37 @@ classdef Imager < Instrument
                 opticalModel{15} = struct('name','L3_1','type','triplet lens','coatingName','ICOS_LAL14','number',1,'angle',[],'efficiency',[],'surfaceQuality',1/10,'focalLength',20,'internalTrans',0.998*0.97*0.996);
                 opticalModel{16} = struct('name','L3_2','type','triplet lens','coatingName','ICOS_BSL7','number',1,'angle',[],'efficiency',[],'surfaceQuality',1/10,'focalLength',20);
                 
-
+                
                 name = 'Fiber Channel';
                 bandPass = [965,1300];
-% %                 bandPass = [600,1500];
+                % %                 bandPass = [600,1500];
                 pixelPitch = 0.5e-6;
                 detectorDimensions = [100,98];
                 plateScale = [];
                 psf = 3.6e-6;% 980nm;
                 
+                
+            elseif strcmp(type,'VISFIBER') == 1
+                
+                opticalModel{1} = struct('name','M1','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
+                opticalModel{2} = struct('name','M2','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
+                opticalModel{3} = struct('name','M3','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
+                opticalModel{4} = struct('name','FSM','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
+                opticalModel{5} = struct('name','Shortpass','type','Dichroic','coatingName','AlluxaSP_R','number',1,'angle','45','efficiency',[],'surfaceQuality',1/10,'focalLength',[]);
+                opticalModel{6} = struct('name','Longpass','type','Dichroic','coatingName','AlluxaLP_R','number',1,'angle','45','efficiency',[],'surfaceQuality',1/10,'focalLength',[]);
+                
+                
+                name = 'Fiber Channel';
+                bandPass = [600,1500];
+                pixelPitch = 0.5e-6;
+                detectorDimensions = [100,98];
+                plateScale = [];
+                psf = 3.6e-6;% 980nm;
+                
+                
             elseif strcmp(type,'QUADCELL') == 1
                 
-               opticalModel{1} = struct('name','M1','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
+                opticalModel{1} = struct('name','M1','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
                 opticalModel{2} = struct('name','M2','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
                 opticalModel{3} = struct('name','M3','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
                 opticalModel{4} = struct('name','L1_1','type','triplet lens','coatingName','RMI_BASF51','number',1,'angle',[],'efficiency',[],'surfaceQuality',1/10,'focalLength',257,'internalTrans',0.998*0.996*0.999);
@@ -135,7 +154,21 @@ classdef Imager < Instrument
                 
                 
             elseif strcmp(type,'LBTI') == 1
-%                 opticalModel{1} = struct('name','Entrance Window','type','dichroic','coatingName','AlluxaEntWT','number',1,'angle','15','efficiency',[]);
+                opticalModel{1} = struct('name','Entrance Window','type','dichroic','coatingName','AlluxaEntWT','number',1,'angle','15','efficiency',[]);
+                opticalModel{2} = struct('name','Ellipse Mirror','type','elliptical mirror','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
+                opticalModel{3} = struct('name','Pupil mirrror','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
+                opticalModel{4} = struct('name','Roof mirrror','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
+                opticalModel{5} = struct('name','Switch Box mirrror','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
+                opticalModel{6} = struct('name','Exit window','type','mirror','coatingName','RMI_exit','number',1,'angle',[],'efficiency',[]);
+                
+                bandPass = [400,2000];
+                pixelPitch = 6.5e-6;
+                detectorDimensions = [512,512];
+                plateScale = [];
+                name = 'LBTI';
+                psf = 1.7112e-05; %scaled using ANDOR camera
+                
+            elseif strcmp(type,'LBTI_ZnSe') == 1
                 opticalModel{1} = struct('name','Entrance Window','type','dichroic','coatingName','LBTI_ZnSeT','number',1,'angle',[],'efficiency',[]);
                 opticalModel{2} = struct('name','Ellipse Mirror','type','elliptical mirror','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
                 opticalModel{3} = struct('name','Pupil mirrror','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[]);
@@ -149,6 +182,7 @@ classdef Imager < Instrument
                 plateScale = [];
                 name = 'LBTI';
                 psf = 1.7112e-05; %scaled using ANDOR camera
+                
                 
             elseif strcmp(type,'Filter') == 1
                 opticalModel{1} = struct('name','Filter','type','bandpass','coatingName','FB1330_12','number',1,'angle',[],'efficiency',[]);
@@ -167,7 +201,7 @@ classdef Imager < Instrument
                 pixelPitch = 6.5e-6;
                 detectorDimensions = [512,512];
                 psf = 1.7112e-05; %scaled using ANDOR camera
-            
+                
             elseif strcmp(type,'demonstrator') == 1
                 opticalModel{1} = struct('name','demo','type','none','coatingName','demo','number',1,'angle',[],'efficiency',[]);
                 opticalModel{2} = struct('name','Input power','type','thor lens','coatingName','NIRII','number',1,'angle',[],'efficiency',[],'surfaceQuality',1/4);
@@ -180,13 +214,13 @@ classdef Imager < Instrument
                 detectorDimensions = [512,512];
                 psf = 1.7112e-05; %scaled using ANDOR camera
                 
-            end  
+            end
             
             
             current_path = pwd;
             if strcmp(current_path(2:8),'Volumes')==1
-               curveDirectory = '/Volumes/Software/Simulator/RefFiles/Curves/Instrument/';
-
+                curveDirectory = '/Volumes/Software/Simulator/RefFiles/Curves/Instrument/';
+                
             elseif strcmp(current_path(2:4),'afs')==1
                 
                 curveDirectory = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/Curves/Instrument/';
@@ -216,7 +250,7 @@ classdef Imager < Instrument
     methods(Static)
         
         function [airy] = genPSF(bandPass, q, npup)
-        
+            
             lambda = mean(bandPass); % in meters
             
             alpha = 0.11;% blocking parameters
@@ -244,52 +278,52 @@ C(Z<R) = 1;
 
 end
 function [airy] = diffraction_pattern(q,lambda,npup,alpha)
-            
-            %%-------------------
-            % upscale computation
-            %%-------------------
-            
-            q = 2*q; % gives higher sampling
-            
-            npup = 2*npup; % keeps grid size same after binning by factor of 2 (factor of 2 is used to generate upscale simluated nyquist PSFs by minimum amount) 
-            
-            %%-----------------------
-            % calculate airy pattern
-            %%-----------------------
-            
-            pup_out = circ(npup,npup/q/2);
-            
-            pup_in = circ(npup,alpha*npup/q/2);
-            
-            pupil = pup_out-pup_in;
-            
-            opd = ones(size(pupil));
-            
-            P = pupil .* exp(1i * 2*pi/lambda * opd);
-            
-            psf = fftshift(fft2(P));
-            
-            psf = psf .* conj(psf);
-            
-            airy = psf ./ sum(psf(:));
-            
-            
-            %%----------
-            % Bin down
-            %%----------
-            
-            p = 2; % default by 2
-            
-            q = 2; % default by 2
-            
-            [m,n]=size(airy); %M is the original matrix
 
-            airy=sum(reshape(airy,p,[]) ,1 );
-            
-            airy=reshape(airy,m/p,[]).'; %Note transpose
+%%-------------------
+% upscale computation
+%%-------------------
 
-            airy=sum(reshape(airy,q,[]) ,1);
-            
-            airy=reshape(airy,n/q,[]).'; %Note transpose
+q = 2*q; % gives higher sampling
 
-        end
+npup = 2*npup; % keeps grid size same after binning by factor of 2 (factor of 2 is used to generate upscale simluated nyquist PSFs by minimum amount)
+
+%%-----------------------
+% calculate airy pattern
+%%-----------------------
+
+pup_out = circ(npup,npup/q/2);
+
+pup_in = circ(npup,alpha*npup/q/2);
+
+pupil = pup_out-pup_in;
+
+opd = ones(size(pupil));
+
+P = pupil .* exp(1i * 2*pi/lambda * opd);
+
+psf = fftshift(fft2(P));
+
+psf = psf .* conj(psf);
+
+airy = psf ./ sum(psf(:));
+
+
+%%----------
+% Bin down
+%%----------
+
+p = 2; % default by 2
+
+q = 2; % default by 2
+
+[m,n]=size(airy); %M is the original matrix
+
+airy=sum(reshape(airy,p,[]) ,1 );
+
+airy=reshape(airy,m/p,[]).'; %Note transpose
+
+airy=sum(reshape(airy,q,[]) ,1);
+
+airy=reshape(airy,n/q,[]).'; %Note transpose
+
+end

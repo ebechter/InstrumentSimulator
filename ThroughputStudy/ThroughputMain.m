@@ -48,7 +48,7 @@ sources{1}.atmosphere = 1;
 
 %sources{1}.throughput = {'lbt','lbti','fiberCh','SMFCoupling','fiberLink','spectrograph'};
 
-sources{1}.throughput = {'lbt','demonstrator'};%'SMFCoupling','fiberLink','spectrograph'};
+sources{1}.throughput = {'lbt','lbti_ZnSe','fiberChVIS'};%'SMFCoupling','fiberLink','spectrograph'};
 
 sources{1}.AO = 1;  
 

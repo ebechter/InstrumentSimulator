@@ -28,7 +28,6 @@ classdef FiberCouplingV2
         Phase
         FiberPhase
         rmsPhase
-        rmsWFE
         
         %Field comparison
         Efield
@@ -194,9 +193,8 @@ classdef FiberCouplingV2
             circpix2 =(N-cenx).^2 + (M-ceny).^2 <= (alpha*radius).^2;
             circpix2 = 1-circpix2;
             circpix = logical(circpix.*circpix2);
-            obj.rmsWFE = rms(W(circpix));
-            obj.rmsPhase = rms(angle(obj.Pupil(circpix)));
-            
+            obj.rmsPhase = rms(W(circpix));
+            obj.rmsPhase = rms(angle(obj.Pupil)
             %-----------------------%
             % Image Plane definition
             %-----------------------%

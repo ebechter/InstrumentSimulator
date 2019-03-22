@@ -182,9 +182,9 @@ for ii = tracenum
         imagerComponents = [imagerComponents, lbti];
     end
     
-    if any(strcmp('lbti_ZnSe', source{ii}.throughput)) == 1 && exist('lbti_ZnSe','var') == 0
-        % make the lbti ZnSe window throughput
-        lbti = Imager('LBTI_ZnSe');
+    if any(strcmp('lbti_ZnSe', source{ii}.throughput)) == 1 && exist('lbti','var') == 0
+        % make the lbti throughput
+        lbti = Imager('LBTI');
         imagerComponents = [imagerComponents, lbti];
     end
     
@@ -194,8 +194,8 @@ for ii = tracenum
         imagerComponents = [imagerComponents, fiber];
     end
     
-    if any(strcmp('fiberChVIS', source{ii}.throughput)) == 1 && exist('fiberchVIS','var') == 0
-        % visibe light fiber channel
+    if any(strcmp('fiberchVIS', source{ii}.throughput)) == 1 && exist('fiberchVIS','var') == 0
+        % make the a flat instrument throughput
         visfiber = Imager('VISFIBER');
         imagerComponents = [imagerComponents, visfiber];
     end

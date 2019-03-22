@@ -67,10 +67,13 @@ dof = 0; % depth of focus (not sure if used yet)
 
 a = [0:0.1:10]; %0.5~0.7 microns %a=1 in tip and tilt account for 30%
 
-for jj = 1:length(wfe)
+for jj = 2%length(wfe)
     
     f =[];
-    
+    rmsWFE = [];
+    rmsPhase = [];
+    X = [];
+    Y= [];
     for ii = 1:length(a)
         
         wfe(jj) = a(ii);
@@ -85,8 +88,18 @@ for jj = 1:length(wfe)
         
         f = [f; A.Rho];
         
+        rmsPhase= [rmsPhase; A.rmsPhase];
+        
+        rmsWFE = [rmsWFE; A.rmsWFE];
+        
+        phi(ii)=2*[(a(ii)./1.064e-6)-1i]*pi;
+        
+        X = [X,x];
+        Y = [Y,y];
+        
     end
     
+    return
     a2 =[0:0.01:max(a)];
     
     f2 = interp1(a,f,a2);
@@ -96,12 +109,9 @@ for jj = 1:length(wfe)
     fc(jj,:) = f2; % for multiple wavelengths
 end
 
-a = a2;
-
 fc= fc./max(fc);
 
-save('fiber coupling', 'fc','a')
-
+save('fiber coupling', 'fc','a2')
 
 
 %---------------------%
@@ -113,7 +123,7 @@ for ii = 2:8
     colors{ii} = science(ii,:);
 end
 
-RuilierPlot(fc,a,colors)
+RuilierPlot(fc,a2,colors)
 
 function [xc, yc] = centroid(img)
 % CENTROID computes image centroid location
