@@ -261,16 +261,16 @@ classdef Simulation
             
 
             %% Aberration Map %%% 
-%             cdisp_wfe = linspace(1/16,0,36/2);
-%             cdisp_wfe = [cdisp_wfe -fliplr(cdisp_wfe)];
-%             
-%             disp_wfe = linspace(1/16,0,length(wavelength)/2);
-%             disp_wfe = [disp_wfe -fliplr(disp_wfe)];
-%             if rem(length(wavelength),2) ~= 0
-%                 disp_wfe = [disp_wfe disp_wfe(end)];
-%             end
-%             
-%             assert(length(disp_wfe) == length(wavelength))
+            cdisp_wfe = linspace(1/16,0,36/2);
+            cdisp_wfe = [cdisp_wfe -fliplr(cdisp_wfe)];
+            
+            disp_wfe = linspace(1/16,0,length(wavelength)/2);
+            disp_wfe = [disp_wfe -fliplr(disp_wfe)];
+            if rem(length(wavelength),2) ~= 0
+                disp_wfe = [disp_wfe disp_wfe(end)];
+            end
+            
+            assert(length(disp_wfe) == length(wavelength))
    
             
             % Custom convolution
@@ -278,8 +278,8 @@ classdef Simulation
             % Do the first loop iteration outside the loop. Need to
             % calculate dim first
             ii = 1;
-            wfe(7) = 0;%disp_wfe(ii);
-            wfe(8) = 0;%cdisp_wfe(ordernum);  
+            wfe(7) = disp_wfe(ii);
+            wfe(8) = cdisp_wfe(ordernum);  
             
             
             %%% Linear scaling from one psf to another %%% 
@@ -308,7 +308,7 @@ classdef Simulation
             for ii = 2:length(wavelength)
 
 %                 wfeList{ii} = 2*pi*wfe*(0.97/wavelength(ii));
-                wfe(7) = 0;%disp_wfe(ii);
+                wfe(7) = disp_wfe(ii);
                 wfeList{ii} = 2*pi*wfe;
 
                 PSF(:,:,ii) = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
