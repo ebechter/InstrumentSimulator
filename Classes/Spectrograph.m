@@ -4,28 +4,32 @@ classdef Spectrograph < Instrument
         grating
         maxR
         pixSamp
+        dichroism % mean and std dichroism for all orders
+        D % average dichroism parameters of all orders
     end
     
     methods
         
         function [obj] = Spectrograph(polarization,type)
             %% Pre Initialization %%
-            % Any code not using output argument (obj)
-            %Need to define an optical model structure and rules.
-            %Primary grating needs to be at the end
+            % Primary grating needs to be at the end
+            % polarization = [0.5,0.1,0]; % degree of  polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
             
-            % Any code not using output argument (obj)
             if nargin == 0
                 
-                type = 'Richardson';
                 polarization = [0,0,0]; % degree of  polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
-                
+                type = 'Richardson';
+                                
             elseif nargin == 1
                 
                 type = 'Richardson';
-                polarization = [0,0,0]; % degree of  polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
                 
             end
+            
+            if length(polarization)<5
+                polarization(4) = 1; %amplitude scale
+                polarization(5) = 0; %nm offset
+            end            
             
             
             if strcmp(type,'Old') == 1
@@ -73,10 +77,19 @@ classdef Spectrograph < Instrument
                 opticalModel{9} = struct('name','H4RG','type','detector','coatingName','detH4RG','number',1,'angle',[],'efficiency',[],'polarization',0);
                 opticalModel{10} = struct('name','R6Grating','type','Grating','coatingName','R6Silicon','number',1,'angle','81','efficiency',[],'polarization',0);
                 bandPass = [800,1600];
+                
+                %The new grating .dat files are incomplete in two orders.
+                %They havent been fixed yet. 5/6/19
+                
+                
+            elseif strcmp(type,'Test') == 1
+                opticalModel{1} = struct('name','Col M1','type','conic','coatingName','FathomGold','number',1,'angle','10','efficiency',[],'polarization',0);
+                opticalModel{2} = struct('name','R6Grating','type','Grating','coatingName','R6Silicon','number',1,'angle','81','efficiency',[],'polarization',1);
+                bandPass = [800,1600];
+                
             end
             
-            
-            %             polarization = [0.5,0.1,0]; % degree of  polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
+           
             
             current_path = pwd;
             if strcmp(current_path(2:8),'Volumes')==1
@@ -105,6 +118,7 @@ classdef Spectrograph < Instrument
             obj.maxR = maxR;
             obj.pixSamp = pixSamp;
             obj.name = 'Spectrograph';
+            
             [obj] = loadOpticalModelCurves(obj,curveDirectory);
             [obj] = trimThroughput(obj);
             [obj] = R6Grating(obj,curveDirectory);
@@ -122,46 +136,103 @@ classdef Spectrograph < Instrument
         end
         
         function[obj] = R6Grating(obj,curveDirectory)
-            %% ----------Load Curves----------%
+            
+            %%---------------------
+            % Load Grating
+            %%---------------------
+            %There is only one option right now. It is richardson grating
+            %that was fit with Gaussian curves to make synthetic grating.
+            %Other grating files are incomplete right now but should be
+            %used in the future 5/7/19
+            
             gratingfile = [curveDirectory,'R6Grating81.mat'];
+            
             load(gratingfile)
             
-            %% ----------Assign Object Properties----------%
-            if isempty (obj.polarization == 1) || obj.polarization(1,3) == 0 || obj.opticalModel{ii}.polarization == 0
+            %%---------------------
+            % Polarization Options
+            %%---------------------
+            
+            if isempty (obj.polarization == 1) || obj.polarization(1,3) == 0 || obj.opticalModel{end}.polarization == 0
                 % if the user does not set the polarization, sets it but
                 % flags as 0 or turns off the grating polarization
                 % specifically
-                % obj.grating= GratingEff_new;
-                % !!!!!!!!!at PDR we used this but now we should use will use
-                % unpolarized grating set below.
-                pfrac = 0;
-                sfrac = 1-pfrac;
+                
                 dop =  0; % this makes it unpolarized
                 
-            else
-                % if polarization state is set, is flagged as 1 and the
-                % grating polarization is turned on
-                pfrac = obj.polarization(1,2);
-                sfrac = 1-pfrac;
-                dop =  obj.polarization(1,1);
+                pfrac = 0; %value is negated by 0 dop 
+                
+                sfrac = 1-pfrac; %value is negated by 0 dop
+                
+                
+            else % pol state is set, is flagged as 1 and the grating polarization is turned on
+                
+                pfrac = obj.polarization(1,2); %normalized energy in p state
+                
+                sfrac = 1-pfrac; %normalized energy in s state
+                
+                dop =  obj.polarization(1,1); %degree of polarization
             end
             
-            %offset s and p in wavelength space
-            offset = 0.5; %1/4 to 1/2 nm looks about right from measured data
+            %%------------------
+            % Offset Peaks
+            %%------------------
+            
+            offset  = obj.polarization(5) ; %1/4 to 1/2 nm looks about right from measured data
+            
             peff = GratingEff_new(:,2:40);
+            
             wave = GratingEff_new(:,1);
+            
             wave_s = wave + offset;
+            
             seff = interp1(wave_s,peff,wave,'linear',0);
             
-            %rescale amplitudes
-            scale = 1.135;
-            %              scale = 1.5;
-            peff = scale*peff;
-            seff = (2-scale)*seff;
+            %%------------------
+            % Rescale Amplitudes
+            %%------------------
             
+            scale = obj.polarization(4); %1.135 and 1.5 were being tested
+            %peff = scale*peff;
+            %seff = (2-scale)*seff;
+
+            seff = scale*seff; % Andrew added 5/6/19
+            
+            %%---------------------
+            % Partial polarization
+            %%---------------------
+           
             unpolarized = 0.5*(seff+peff);
+            
             polarized = dop*(seff*sfrac+peff*pfrac)+unpolarized*(1-dop);
+            
+            %%------------------
+            % Dichroism
+            %%------------------
+            
+            D = (seff-peff)./(seff+peff);
+
+            D(peff < 0.005) = NaN;
+            D(seff < 0.005) = NaN;
+            
+            mu = nanmean(D,1);
+            
+            sigma = nanstd(D,1);
+                        
+            %%------------------
+            % Assign Properties
+            %%------------------
+            
+            obj.dichroism(:,1) = mu;
+            
+            obj.dichroism(:,2) = sigma;
+            
+            obj.D(1) = mean(mu);
+            
+            obj.D(2) = mean(sigma);
+            
             obj.grating(:,1)=GratingEff_new(:,1);
+            
             obj.grating(:,2:40)=polarized;
             
         end

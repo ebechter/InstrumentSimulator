@@ -1,5 +1,5 @@
 function SimulationMainAB(parallelInfo,runInfo,specInfo,fitsname, ...
-    optical,starInfo,source,SpecOrImager,conditions, headerinfo,persistentSource)
+    optical,starInfo,source,SpecOrImager,conditions, headerinfo,persistentSource,randflag)
 
 % Creates all simulation objects, combines throughput with flux,
 % simlulates physical instrument response (PSF or spectrum) and writes data product  
@@ -597,7 +597,7 @@ for jj = tracenum
             
             fprintf('working on order %i... ',ii)
             
-            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(parallel_cell{1}(:,ii),parallel_cell{2}(:,ii),wave_coeff(ii,:,jj),wfe,parallel_scale,ii);
+            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(parallel_cell{1}(:,ii),parallel_cell{2}(:,ii),wave_coeff(ii,:,jj),wfe,parallel_scale,ii,randflag);
             detector(:,:,ii,jj) = simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
             fprintf('%s \n',char(hex2dec('2713')))
             
@@ -609,7 +609,7 @@ for jj = tracenum
             
             fprintf('working on order %i... ',ii)
             
-            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(spectral_cell{jj}{1}(:,ii),spectral_cell{jj}{2}(:,ii),wave_coeff(ii,:,jj),wfe,simulation.scale,ii);
+            [OrderFlux{ii}, OrderWave{ii}] = Simulation.ConvolveOrder(spectral_cell{jj}{1}(:,ii),spectral_cell{jj}{2}(:,ii),wave_coeff(ii,:,jj),wfe,simulation.scale,ii,randflag);
             detector(:,:,ii,jj) = simulation.CliptoDetector(OrderFlux{ii}, OrderWave{ii},order_coeff(ii,:,jj),wave_coeff(ii,:,jj),cheby,p1{jj},ii);
             fprintf('%s \n',char(hex2dec('2713')))
             

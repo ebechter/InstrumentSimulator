@@ -193,20 +193,29 @@ classdef Simulation
             
         end
         
-        function [APSF] = makeAbPsf(wfe,pixSamp,scale)
+        function [APSF] = makeAbPsf(wfe,pixSamp,scale,randflag)
             
             grid= 51;
             pad = round((((fliplr(scale*pixSamp)-3)/3)+0.5)*grid);
            
-            %Zernike phase map
-            W = 0; %
-            for z = 1:length(wfe)
-                Z = ZernikeCalc(z,1,grid); % use ZernikeCalc to produce normalized zernike surface
-                Z = padarray(Z,pad);% increase padding on output;
-                Z = Z./(max(max(Z)));
-                Ab = wfe(z)*Z;
-                W = W+Ab;
+            if randflag
+                
+                W = normrnd(0,wfe(1)/(2*pi),grid); % use ZernikeCalc to produce normalized zernike surface
+                W = padarray(W,pad);% increase padding on output;
+                
+                
+            else
+                %Zernike phase map
+                W = 0; %
+                for z = 1:length(wfe)
+                    Z = ZernikeCalc(z,1,grid); % use ZernikeCalc to produce normalized zernike surface
+                    Z = padarray(Z,pad);% increase padding on output;
+                    Z = Z./(max(max(Z)));
+                    Ab = wfe(z)*Z;
+                    W = W+Ab;
+                end
             end
+            
             
             N = size(W);% variable 7/25/17 Sampling points
             dl = 1;%L/N; %Pupil plane grid spacing (meters)
@@ -240,7 +249,7 @@ classdef Simulation
             APSF = APSF./(sum(sum(APSF)));
         end
 
-        function [trim, wavelength] = ConvolveOrder(wavelength,spectrum,wave_coeff,wfe,scale,ordernum)
+        function [trim, wavelength] = ConvolveOrder(wavelength,spectrum,wave_coeff,wfe,scale,ordernum,randflag)
             
             % trim each order beyond the edge of the detector
             
@@ -278,8 +287,8 @@ classdef Simulation
             % Do the first loop iteration outside the loop. Need to
             % calculate dim first
             ii = 1;
-            wfe(7) = disp_wfe(ii);
-            wfe(8) = cdisp_wfe(ordernum);  
+%             wfe(7) = disp_wfe(ii);
+%             wfe(8) = cdisp_wfe(ordernum);  
             
             
             %%% Linear scaling from one psf to another %%% 
@@ -289,7 +298,8 @@ classdef Simulation
 
             %%% Constant PSF %%% 
             wfeList{ii} = 2*pi*wfe;
-            PSF(:,:,1) = Simulation.makeAbPsf(wfeList{ii},0.9*[3 3],scale);
+            % Added a random flag 
+            PSF(:,:,1) = Simulation.makeAbPsf(wfeList{ii},0.9*[3 3],scale,randflag);
 %             PSF(:,:,1) = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
             [kernel,~] = Simulation.MakePSF(scale,scaleH(1)*0.9*3,scaleV*0.9*3);
             % broaden the default 3x3 pixel sampling according to the specific sampling needed
@@ -311,9 +321,9 @@ classdef Simulation
                 wfe(7) = disp_wfe(ii);
                 wfeList{ii} = 2*pi*wfe;
 
-                PSF(:,:,ii) = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
+%                 PSF(:,:,ii) = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
 
-                PSF(:,:,ii) = Simulation.makeAbPsf(wfeList{ii},0.9*[3 3],scale);
+                PSF(:,:,ii) = Simulation.makeAbPsf(wfeList{ii},0.9*[3 3],scale,randflag);
                 % PSF(:,:,1) = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
                 [kernel,~] = Simulation.MakePSF(scale,scaleH(ii)*0.9*3,scaleV*0.9*3);
                 % broaden the default 3x3 pixel sampling according to the specific sampling needed

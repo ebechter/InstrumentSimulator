@@ -27,7 +27,7 @@ tic
 
 parflag = false; %true or false
 
-numworkers =2;
+numworkers = 4;
 
 parallelInfo = {numworkers,parflag};
 
@@ -164,6 +164,8 @@ optical.wfe(14) = 0;    % Secondary coma
 optical.wfe(15) = 0;    % -
 optical.wfe(16) = 0;    % Secondary spherical abb
 
+randflag = 1;           % flag to use wfe values as rms random wfe draw. Need to assign rms to optical.wfe(1). 
+optical.wfe(1) = 0.3;
 %========== Polarization State ===========%
 
 % Can be used on a single optic which is set in instrument
@@ -222,11 +224,11 @@ for ii = 1:length(testwfe)
         };
     
     
-    fname = ['TestingAbScript' num2str(ii)];
+    fname = ['TestingRandomAbCreation' num2str(ii)];
     fitsname = [pathprefix,'/',fname,'.fits'];
     
     SimulationMainAB(parallelInfo,runInfo,specInfo,fitsname, ...
-    optical,starInfo,sources,SpecOrImager,conditions,headerinfo,persistentSource);
+    optical,starInfo,sources,SpecOrImager,conditions,headerinfo,persistentSource,randflag);
     
 
 end
