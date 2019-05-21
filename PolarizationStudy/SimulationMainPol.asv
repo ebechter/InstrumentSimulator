@@ -179,9 +179,6 @@ for ii = tracenum
         for kk = 1:size(optical.polarization,1)
             temp = Spectrograph(polarization(kk,:),'Richardson');
             spectrograph.finalThroughput{kk} = temp.finalThroughput;
-            if mod(kk,1000) == 0
-                disp(kk)
-            end
             clear temp
         end
         
@@ -581,10 +578,11 @@ for ii = tracenum
             for jj = 1:size(optical.polarization,1)
                 temp1 = Simulation.addSpecThroughput(spectral_cell{ii},spectrograph.finalThroughput{jj},nOrders);
                 temp2 = temp1{2} + temp2;  
+                max(max(temp2))
             end
             spectral_cell{ii}{1,2} = temp2;
+            max(max(spectral_cell{ii}{1,2}))
             clear jj
-            spectrograph.finalThroughput = spectrograph.finalThroughput{1};
         end
         
         %----------------------%

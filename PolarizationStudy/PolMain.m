@@ -47,7 +47,7 @@ sources{1}.name = 'star';
 
 sources{1}.atmosphere = 0;
 
-sources{1}.throughput = {'lbt','lbti','fiberCh','SMFCoupling','fiberLink','spectrograph'};
+sources{1}.throughput = {'lbt','spectrograph'};
 
 % sources{1}.throughput = {'lbt','lbti','fiberCh'};%'SMFCoupling','fiberLink','spectrograph'};
 
@@ -177,36 +177,98 @@ optical.dof = 0; % depth of focus (not sure if used yet)
 
 pathprefix = pwd;
 
-for ii = 1:1
-    
-    starInfo = {spType,vmag,epsilon,vsini,rv,units};
-    headerinfo = {
-        'version',version,'version';...
-        'footprint',footprint,'spectrograph fpt';...
-        'parallel',parflag,' ';...
-        'scale',scale,'upsample factor';...
-        'nOrders',nOrders,'num orders';...
-        'aoType',aoType,'FLAO or SOUL AO';...
-        'tracenum',tracenum','traces';...
-        'entWindow',entWindow,'entrance window';...
-        'zenith',zenith,' zenith in rad';...
-        'seeing',seeing,'seeing in arcsec';...
-        'Inst',SpecOrImager,'instrument type';...
-        'SpType',spType,'spec type';...
-        'units',units,'units of spectrum';...
-        'Vmag', vmag,' ';...
-        'RV', rv,'Injected RV (m/s)';...
-        'Vsini', vsini,' ';...
-        'Tlrcs', sources{1}.atmosphere ,'Are tellurics included 1/0';...
-        'Pol',optical.polarization,'pol parameters';...
-        };
-    
-    
-    fname = ['TestingPol2' num2str(ii)];
-    fitsname = [pathprefix,'/Output/Polarization/',fname,'.fits'];
-    
-    [Spectrograph] = SimulationMainPol(parallelInfo,runInfo,specInfo,fitsname, ...
-    optical,starInfo,sources,SpecOrImager,conditions,headerinfo,persistentSource,randflag);
-    
+% polarization(1,:) = [1,0.0,1,1,0.5];
+% polarization(2,:) = [1,0.1,1,1,0.5];
+% polarization(3,:) = [1,0.2,1,1,0.5];
+% polarization(4,:) = [1,0.3,1,1,0.5];
+% polarization(5,:) = [1,0.4,1,1,0.5];
+% polarization(6,:) = [1,0.5,1,1,0.5];
+% polarization(7,:) = [1,0.6,1,1,0.5];
+% polarization(8,:) = [1,0.7,1,1,0.5];
+% polarization(9,:) = [1,0.8,1,1,0.5];
+% polarization(10,:) = [1,0.9,1,1,0.5];
+% polarization(11,:) = [1,1,1,1,0.5];
 
+%---------------------%
+% Polarization options
+%---------------------%
+baseline = [1,0.5,1,1,0.5];
+
+%---------------------%
+% Experimental Data
+%---------------------%
+
+% load('S:\Simulator\PolarizationStudy\Modulation\InputSet1.mat')
+% 
+% Sfrac = PxIn;
+% polarization = repmat(baseline,size(Sfrac,2),1);
+% polarization(:,2) = Sfrac; 
+
+%---------------------%
+% Theoretical Space
+%---------------------%
+
+Sfrac = [0:0.25:1];
+offset = [-1:0.25:1];
+
+n = size(Sfrac,2);
+m = size(offset,2);
+
+flag = ones(1,n);
+amp = ones(1,n);
+dop = ones(1,n);
+
+polarization = zeros(n,5,m);
+
+for ii = 1:n
+    for jj = 1:m
+        polarization(ii,1,jj) = dop(ii);
+        polarization(ii,2,jj) = Sfrac(ii);
+        polarization(ii,3,jj) = flag(ii);
+        polarization(ii,4,jj) = amp(ii);
+        polarization(ii,5,jj) = offset(jj);
+    end
 end
+
+%---------------------%
+% Simulate Spectrum
+%---------------------%
+
+for ii = 1:m
+    for jj = 1:n
+        optical.polarization = polarization(jj,:,ii);
+        
+        starInfo = {spType,vmag,epsilon,vsini,rv,units};
+        headerinfo = {
+            'version',version,'version';...
+            'footprint',footprint,'spectrograph fpt';...
+            'parallel',parflag,' ';...
+            'scale',scale,'upsample factor';...
+            'nOrders',nOrders,'num orders';...
+            'aoType',aoType,'FLAO or SOUL AO';...
+            'tracenum',tracenum','traces';...
+            'entWindow',entWindow,'entrance window';...
+            'zenith',zenith,' zenith in rad';...
+            'seeing',seeing,'seeing in arcsec';...
+            'Inst',SpecOrImager,'instrument type';...
+            'SpType',spType,'spec type';...
+            'units',units,'units of spectrum';...
+            'Vmag', vmag,' ';...
+            'RV', rv,'Injected RV (m/s)';...
+            'Vsini', vsini,' ';...
+            'Tlrcs', sources{1}.atmosphere ,'Are tellurics included 1/0';...
+            'Pol',optical.polarization,'pol parameters';...
+            };
+        
+        
+        fname = ['TestingPol2' num2str(ii)];
+        fitsname = [pathprefix,'/Output/Polarization/',fname,'.fits'];
+        
+        [spectrograph{jj,ii},~,OrderFlux{jj,ii},OrderWave{jj,ii}] = SimulationMainPol(parallelInfo,runInfo,specInfo,fitsname, ...
+            optical,starInfo,sources,SpecOrImager,conditions,headerinfo,persistentSource,randflag);
+    end
+    
+end
+
+save('S:\Simulator\PolarizationStudy\PolarizationTests\Dichroism3D','polarization','Spectrograph','OrderFlux','OrderWave') 
+toc

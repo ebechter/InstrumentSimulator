@@ -1,0 +1,85 @@
+%Polarization Grating Plots
+
+%Right now the script need spectrograph and spectrum inputs from simulation
+%script output. 
+
+%%------------
+% Load Files
+%%------------
+
+load('S:\Simulator\PolarizationStudy\PolarizationTests\DichroismSet1.mat')
+
+% -----------%
+% Plotting
+% -----------%
+
+quart = char(188);     % 1/4 symbol
+half = char(189);      % 1/2 symbol
+quart3 = char(190);    % 3/4 aymbol
+piStr = char(960);     % Greek letter pi
+
+N = 14;
+c = viridis(N);
+c = c(1:N-1,:);
+
+% -------------------------------%
+% Grating wavelngth vs. Intensity
+% -------------------------------%
+
+
+
+
+OrderWave{n:n:end,:}=[];
+Spectrograph{2:2:end}=[];
+
+n = length(spectral_cell); % files
+jj = 15; %order number;
+    
+figure()
+hold on
+for ii = 1:n
+h(ii) = plot(OrderWave{ii}{jj}(1,:),OrderFlux{ii}{jj}(1,:));
+D = Spectrograph{ii}.polarization(1,2);
+labels{ii} = ['$S = ',num2str(D,'%.2f'),'$'];
+end
+
+%settings
+opt = [];
+opt.MarkerSpacing = [100,100];
+opt.LineWidth = [1,1];
+opt.Markers = {'none','none','none','none'};
+opt.MarkerSize = [5,7];
+opt.LineStyle = {'-','-','-','-'};
+opt.Colors = c; % change plot color
+opt.XLabel = '$Wavlength, \lambda, (nm)$'; % xlabel
+opt.YLabel = '$Intesnity , (cts)$'; %ylabel
+% opt.XLim = [0.97,0.978];
+
+% create the plot
+setPlotProp(opt);
+ax = gca;
+
+
+% leg = [];
+% hand=[];
+% for ii = 1:n
+%   leg = [leg,labels{ii}];
+%   hand = [hand,h(ii)];
+% end
+
+[l,icons,~,~] = legend(h,labels,'Interpreter','latex','location','nw');
+l.Box = 'off';
+l.FontSize = 8;
+% icons(4).Marker = 'o';
+% icons(6).Marker = 'x';
+
+% fig = gcf;
+% fig.PaperPositionMode = 'auto';
+% fig_pos = fig.PaperPosition;
+% fig.PaperSize = [fig_pos(3) fig_pos(4)];
+% print(fig,'Figures/AzBi','-dpdf')
+
+
+
+
+
