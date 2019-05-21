@@ -1,6 +1,5 @@
 /Output/
 *.fits
-*.mat
 /RefFiles/Atmosphere/
 backupArray.mat
 *.png
