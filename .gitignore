@@ -6,7 +6,8 @@ backupArray.mat
 *.pdf
 *.mp4
 *.fig
+*.eps
+/Plotting/
 /FiberCouplingStudy/Output/
 PersistenceStudy\.zip
-
 \.DS_Store
