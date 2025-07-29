@@ -127,7 +127,7 @@ classdef Imager < Instrument
                 opticalModel{10} = struct('name','FSM','type','fold','coatingName','ProtectedGold','number',1,'angle','45','efficiency',[],'surfaceQuality',1/20,'focalLength',[]);
                 opticalModel{11} = struct('name','Shortpass','type','Dichroic','coatingName','AlluxaSP_R','number',1,'angle','45','efficiency',[],'surfaceQuality',1/10,'focalLength',[]);
                 opticalModel{12} = struct('name','Longpass','type','Dichroic','coatingName','AlluxaLP_T','number',1,'angle','45','efficiency',[],'surfaceQuality',1/10,'focalLength',[]);
-                opticalModel{13}= struct('name','L5','type','doublet lens','coatingName','NIRII','number',1,'angle',[],'efficiency',[],'surfaceQuality',1/4,'focalLength',[]);
+                opticalModel{13}= struct('name','L5','type','singlet lens','coatingName','ThorlabsC','number',1,'angle',[],'efficiency',[],'surfaceQuality',1/4,'focalLength',175,'internalTrans',0.998);
                 %opticalModel{11} = struct('name','QuadFilter','type','bandpass filter','coatingName','Imagefilter','number',1,'angle',[],'efficiency',[],'surfaceQuality',[],'focalLength',[]);
                 opticalModel{14}= struct('name','QuadCell','type','detector','coatingName','NIRQuadCell','number',1,'angle',[],'efficiency',[],'surfaceQuality',[],'focalLength',[]);
                 

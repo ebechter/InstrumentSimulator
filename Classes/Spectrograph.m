@@ -19,7 +19,7 @@ classdef Spectrograph < Instrument
                 
                 polarization = [0,0,0]; % degree of  polarization, P-fraction, flag (1 has pol effects, 0 reverts to original)
                 type = 'Richardson';
-                                
+                
             elseif nargin == 1
                 
                 type = 'Richardson';
@@ -29,7 +29,7 @@ classdef Spectrograph < Instrument
             if length(polarization)<5
                 polarization(4) = 1; %amplitude scale
                 polarization(5) = 0; %nm offset
-            end            
+            end
             
             
             if strcmp(type,'Old') == 1
@@ -60,7 +60,7 @@ classdef Spectrograph < Instrument
                 opticalModel{7} = struct('name','Cam M2','type','conic','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',0);
                 opticalModel{8} = struct('name','Cam M3','type','conic','coatingName','FathomGold','number',1,'angle','25','efficiency',[],'polarization',0);
                 opticalModel{9} = struct('name','H4RG','type','detector','coatingName','detH4RG','number',1,'angle',[],'efficiency',[],'polarization',0);
-                opticalModel{10} = struct('name','R6Grating','type','Grating','coatingName','R6Grating','number',1,'angle','81','efficiency',[],'polarization',0);
+                opticalModel{10} = struct('name','R6Grating','type','Grating','coatingName','R6Grating','number',1,'angle','81','efficiency',[],'polarization',1);
                 bandPass = [950,1350];
                 
                 
@@ -89,7 +89,7 @@ classdef Spectrograph < Instrument
                 
             end
             
-           
+            
             
             current_path = pwd;
             if strcmp(current_path(2:8),'Volumes')==1
@@ -99,7 +99,7 @@ classdef Spectrograph < Instrument
             elseif strcmp(current_path(2:4),'afs')==1
                 
                 curveDirectory = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/Curves/Spectrograph/';
-                load('/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/polycoeffs2.mat')               
+                load('/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/polycoeffs2.mat')
             else
                 
                 curveDirectory = [current_path(1:2) '\Simulator\RefFiles\Curves\Spectrograph\'];
@@ -160,25 +160,46 @@ classdef Spectrograph < Instrument
                 
                 dop =  0; % this makes it unpolarized
                 
-                pfrac = 0; %value is negated by 0 dop 
+                pfrac = 0.5; %value is negated by 0 dop but just to be sure
                 
-                sfrac = 1-pfrac; %value is negated by 0 dop
+                sfrac = 1-pfrac; %value is negated by 0 dop but just to be sure
                 
+                offset = 0; % no grating offset
+                
+                scale = 1; % amplitudes equal between efficiency curves
                 
             else % pol state is set, is flagged as 1 and the grating polarization is turned on
                 
                 pfrac = obj.polarization(1,2); %normalized energy in p state
                 
-                sfrac = 1-pfrac; %normalized energy in s state
+                sfrac = 1-pfrac; %normalized energy in s state at center wavelength
                 
                 dop =  obj.polarization(1,1); %degree of polarization
+                
+                offset  = obj.polarization(5) ; %1/4 to 1/2 nm looks about right from measured data
+                
+                scale = obj.polarization(4); %1.135 and 1.5 were being tested
+                
+                %modulation stuff
+%                 wave_mod = (900:10:1300)';
+%                 
+%                 load('S:\Simulator\Output\Polarization\Modulation\mod_lambda')
+%                 
+%                 mPx = mPx';
+%                 
+%                 mPx2 = interp1(wave_mod,mPx,GratingEff_new(:,1),'linear',0);
+%                 
+%                 mPy2 = interp1(wave_mod,1-mPx,GratingEff_new(:,1),'linear',0);
+%                 
+%                 pfrac = repmat(mPx2,1,size(GratingEff_new(:,2:40),2));
+%                 
+%                 sfrac = repmat(mPy2,1,size(GratingEff_new(:,2:40),2));
+            
             end
             
             %%------------------
             % Offset Peaks
             %%------------------
-            
-            offset  = obj.polarization(5) ; %1/4 to 1/2 nm looks about right from measured data
             
             peff = GratingEff_new(:,2:40);
             
@@ -192,33 +213,33 @@ classdef Spectrograph < Instrument
             % Rescale Amplitudes
             %%------------------
             
-            scale = obj.polarization(4); %1.135 and 1.5 were being tested
             %peff = scale*peff;
             %seff = (2-scale)*seff;
-
+            
             seff = scale*seff; % Andrew added 5/6/19
+            
             
             %%---------------------
             % Partial polarization
             %%---------------------
-           
+            
             unpolarized = 0.5*(seff+peff);
             
-            polarized = dop*(seff*sfrac+peff*pfrac)+unpolarized*(1-dop);
-            
+            polarized = dop*(seff.*sfrac+peff.*pfrac)+unpolarized*(1-dop);
+           
             %%------------------
             % Dichroism
             %%------------------
             
-            D = (seff-peff)./(seff+peff);
-
+            D = abs((seff-peff))./(seff+peff);
+            
             D(peff < 0.005) = NaN;
             D(seff < 0.005) = NaN;
             
             mu = nanmean(D,1);
             
             sigma = nanstd(D,1);
-                        
+            
             %%------------------
             % Assign Properties
             %%------------------

@@ -178,17 +178,44 @@ classdef FiberCouplingV2
             Uin1 = circ(Pupil_cenx,Pupil_ceny,D);%outer circle
             Uin2 = circ(Pupil_cenx,Pupil_ceny,D*alpha);%inner circle
             pupil = Uin1-Uin2;%total pupil plance image
+            
+            %-------------------%
+            %Add Spiders code
+            %-------------------%
+            center = [size(pupil,2)./2,size(pupil,1)./2];
+            tr = [size(pupil,2),size(pupil,1)./2- 0.33*size(pupil,1)./2];
+            br = [size(pupil,2),size(pupil,1)./2+ 0.33*size(pupil,1)./2];
+            x = [center(1),tr(1),br(1),center(1)];
+            y = [center(2),tr(2),br(2),center(2)];
+            
+            M1 = poly2mask(x,y,size(pupil,2),size(pupil,1));
+            
+            offset = 7;
+            xx = [center(1)+offset,tr(1)+offset,br(1)+offset,center(1)+offset];
+            yy = [center(2),tr(2),br(2),center(2)];
+            
+            M2 = poly2mask(xx,yy,size(pupil,2),size(pupil,1));
+
+            Spiders = abs(M1-M2);
+            Spiders(:) = ~Spiders;
+            pupil = pupil.*Spiders;
+            
+            clear x y xx yy
+            %-------------------%
+            %End of Spiders code
+            %-------------------%
+            
             W = pupil.*W;
             
             obj.Pupil = pupil.*exp(1i*W); %Complex Pupil plane with phase term
             
             %-----------------------%
             % RMS WFE
-            %-----------------------% 
+            %-----------------------%
             [M,N] = size(obj.Pupil);
             cenx = N./2;
             ceny = M./2;
-            [N,M] = meshgrid(1:N,1:M); 
+            [N,M] = meshgrid(1:N,1:M);
             radius = maskr/2;
             circpix = (N-cenx).^2 + (M-ceny).^2 <= radius.^2;
             circpix2 =(N-cenx).^2 + (M-ceny).^2 <= (alpha*radius).^2;
@@ -204,7 +231,7 @@ classdef FiberCouplingV2
             parPupil = obj.Pupil(:,:,1);
             
             parWave = obj.Wavelength;
-                        
+            
             for ii = 1:length(obj.Wavelength)
                 %Propogate the pupil plane to focal plane (electric fields) at
                 %all wavelengths

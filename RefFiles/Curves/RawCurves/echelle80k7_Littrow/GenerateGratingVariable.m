@@ -14,8 +14,13 @@ hold on
 for ii = 1:length(allNames)
     
 SiliconR681(:,:,ii) = importGratingFile(allNames{ii});
-plot(SiliconR681(:,1,ii),SiliconR681(:,2,ii))
+
 end
+
+figure()
+plot(SiliconR681(:,1,3)*1e9,SiliconR681(:,2,15))
+hold on
+plot(SiliconR681(:,1,3)*1e9,SiliconR681(:,3,15))
 
 %Two of the orders are not complete! This is why we aren't using this data
 %right now.

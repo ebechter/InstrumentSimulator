@@ -40,7 +40,7 @@ classdef Instrument
                     obj.opticalModel{ii}.efficiency = Instrument.loadCurves(filename,number,coatingName);
                     obj.opticalModel{ii}.efficiency(:,2) = obj.opticalModel{ii}.efficiency(:,2).*internalTrans;
                 else
-                    %if the user does want polarization to be used
+                    %if the user wants polarization to be used
                     pol = obj.opticalModel{ii}.polarization;
                     
                     pfrac = obj.polarization(1,2);
@@ -147,6 +147,8 @@ classdef Instrument
             throughput(:,2) = Rpol.^number;
         end
         function [throughput] = loadPolCurves(filename,number,coatingName,pfrac,dop)
+            
+            dop = 0; % forces polarization off while only testing grating elsewhere
             
             temp = load([filename,'.mat']); % convert .mat to normal array from default struct format
             temp = struct2cell(temp);

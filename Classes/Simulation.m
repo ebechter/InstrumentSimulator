@@ -4,6 +4,9 @@ classdef Simulation
         totalCounts
         totalEnergy
         intTrans
+        counts
+        wavelength
+        bandPass
         
     end
     
@@ -193,44 +196,98 @@ classdef Simulation
             
         end
         
-        function [APSF] = makeAbPsf(wfe,pixSamp,scale,randflag)
+%         function [APSF] = makeAbPsf(wfe,pixSamp,scale,randflag)
+%             grid= 51;
+%             
+%             pad = round((((fliplr(scale*pixSamp)-3)/3)+0.5)*grid);
+%            
+%             if randflag
+%                 
+%                 W = normrnd(0,wfe(1)/(2*pi),grid); % use ZernikeCalc to produce normalized zernike surface
+%                 W = padarray(W,pad);% increase padding on output
+%                 
+%             else
+% 
+%                 %Zernike phase map
+%                 W = 0; %
+%                 for z = 1:length(wfe)
+% %                     Z = ZernikeCalc(z,1,floor(grid)); % use ZernikeCalc to produce normalized zernike surface
+% %                     Z = padarray(Z,pad);% increase padding on output;
+%                     Z = ZernikeCalc(z,1,floor(39)); % use ZernikeCalc to produce normalized zernike surface
+%                     Z = padarray(Z,26*ones(1,2));% increase padding on output;
+%                     Z = Z./(max(max(Z)));
+%                     Ab = wfe(z)*Z;
+%                     W = W+Ab;
+%                 end
+%             end
+%             
+%             
+%             N = size(W); % variable 7/25/17 Sampling points
+%             dl = 1;%L/N; %Pupil plane grid spacing (meters)
+%             
+%             [xgrid,ygrid] = meshgrid((-N(2)/2+0.5:N(2)/2-0.5),(-N(1)/2+0.5:N(1)/2-0.5));
+%             
+%             circle = circ(xgrid,ygrid,grid);%outer circle
+%             
+%             gauss=circ_gauss(xgrid,ygrid,[grid/8 grid/8]*sqrt(2),[0,0]);
+%             
+%             gauss = gauss./(max(max(gauss)));
+%             pupil = circle.*gauss;
+%             
+%             Pupil = pupil.*exp(1i*W); %Complex Pupil plane with phase term
+%             
+%             %Propogate the pupil plane to focal plane (electric fields) at
+%             %all wavelengths
+%             
+%             % b = sum(abs(Pupil).^2,1);
+%             % startPoints = [0.35 size(W,2)/2 pixSamp(2)*scale];
+%             % gaussEqn = 'a*exp(-((x-b)/(sqrt(2)*c))^2)';
+%             % f2 = fit((1:length(b))',b',gaussEqn,'Start', startPoints,'Lower', [0, 0, 0]);
+%             % fprintf('pupil sigma %.3f, %.3f\n',f2.c,grid/8)
+%             
+%             PSF = ft2(Pupil,dl);
+%             
+%             APSF = abs(PSF).^2;
+%             keep = round(grid/4);
+%             APSF = APSF(0.5+N(1)/2-keep:N(1)/2+0.5+keep,0.5+N(2)/2-keep:N(2)/2+0.5+keep);
+%             
+%             APSF = APSF./(sum(sum(APSF)));
+%         end
+
+        function [APSF] = makeAbPsf_Andrew(wfe)
             
-            grid= 51;
-            pad = round((((fliplr(scale*pixSamp)-3)/3)+0.5)*grid);
-           
-            if randflag
-                
-                W = normrnd(0,wfe(1)/(2*pi),grid); % use ZernikeCalc to produce normalized zernike surface
-                W = padarray(W,pad);% increase padding on output;
-                
-                
-            else
-                %Zernike phase map
-                W = 0; %
-                for z = 1:length(wfe)
-                    Z = ZernikeCalc(z,1,grid); % use ZernikeCalc to produce normalized zernike surface
-                    Z = padarray(Z,pad);% increase padding on output;
-                    Z = Z./(max(max(Z)));
-                    Ab = wfe(z)*Z;
-                    W = W+Ab;
-                end
+            grid= 129;            
+            wfe = wfe./2;            
+            wfe_exp = [1,2,2,sqrt(3),sqrt(6),sqrt(6),sqrt(8),sqrt(8),sqrt(5),sqrt(8),sqrt(8),sqrt(10),sqrt(10),sqrt(12),sqrt(12),sqrt(7)]';%rms expansion coefficients 
+            wfe = wfe.*wfe_exp;
+            %Zernike phase map
+            W = 0; %
+            for z = 1:length(wfe)
+                Z = ZernikeCalc(z,1,grid); % use ZernikeCalc to produce normalized zernike surface
+                Z = padarray(Z,ceil(1.8*size(Z)/2));% increase padding on output;
+                Z = Z./(max(max(Z)));
+                Ab = wfe(z)*Z;
+                W = W+Ab;
             end
             
             
             N = size(W);% variable 7/25/17 Sampling points
-            dl = 1;%L/N; %Pupil plane grid spacing (meters)
             
             [xgrid,ygrid] = meshgrid((-N(2)/2+0.5:N(2)/2-0.5),(-N(1)/2+0.5:N(1)/2-0.5));
             
             circle = circ(xgrid,ygrid,grid);%outer circle
             
-            gauss=circ_gauss(xgrid,ygrid,[grid/8 grid/8]*sqrt(2),[0,0]);
+            gauss=circ_gauss(xgrid,ygrid,[grid/4 grid/4]*sqrt(2),[0,0]);
             
-            gauss = gauss./(max(max(gauss)));
+%             gauss = gauss./(max(max(gauss)));
+            
             pupil = circle.*gauss;
             
             Pupil = pupil.*exp(1i*W); %Complex Pupil plane with phase term
             
+            % Pupil = padarray(Pupil,[pad,pad]);% increase padding on output;
+            
+            N = size(Pupil);
             %Propogate the pupil plane to focal plane (electric fields) at
             %all wavelengths
             
@@ -240,15 +297,18 @@ classdef Simulation
             % f2 = fit((1:length(b))',b',gaussEqn,'Start', startPoints,'Lower', [0, 0, 0]);
             % fprintf('pupil sigma %.3f, %.3f\n',f2.c,grid/8)
             
-            PSF = ft2(Pupil,dl);
+            PSF = ft2(Pupil,1);
             
             APSF = abs(PSF).^2;
-            keep = round(grid/4);
-            APSF = APSF(0.5+N(1)/2-keep:N(1)/2+0.5+keep,0.5+N(2)/2-keep:N(2)/2+0.5+keep);
-            
+            keep = round(15);
+            APSF = APSF(ceil(N(1)/2)-keep:ceil(N(1)/2)+keep,ceil(N(2)/2)-keep:ceil(N(2)/2)+keep);
             APSF = APSF./(sum(sum(APSF)));
+            
         end
-
+        
+        
+        
+        
         function [trim, wavelength] = ConvolveOrder(wavelength,spectrum,wave_coeff,wfe,scale,ordernum,randflag)
             
             % trim each order beyond the edge of the detector
@@ -259,36 +319,45 @@ classdef Simulation
             wavelength = wavelength(ind1:ind2)';
             spectrum = spectrum(ind1:ind2)';
             
-            % sampled at the high end. 3 pixels at red, smooth function to
-            % 6 pixels at blue. this is pretty unique to iLocater's design
             
-            horSamp = linspace(3,3,length(wavelength));
-            vertSamp = median(horSamp);
-            
-            scaleH = interp1([3 3.0561 3.14 3.559 4 5 6]/3,[0.0001 0.1 1/3 0.5833 0.87 1.333 1.75],horSamp/3,'linear','extrap');
-            scaleV = interp1([3 3.0561 3.14 3.559 4 5 6]/3,[0.0001 0.1 1/3 0.5833 0.87 1.333 1.75],vertSamp/3,'linear','extrap');
+%             horSamp = linspace(3,3,length(wavelength));
+%             vertSamp = median(horSamp);
+%             
+%             scaleH = interp1([3 3.0561 3.14 3.559 4 5 6]/3,[0.0001 0.1 1/3 0.5833 0.87 1.333 1.75],horSamp/3,'linear','extrap');
+%             scaleV = interp1([3 3.0561 3.14 3.559 4 5 6]/3,[0.0001 0.1 1/3 0.5833 0.87 1.333 1.75],vertSamp/3,'linear','extrap');
             
 
-            %% Aberration Map %%% 
-            cdisp_wfe = linspace(1/16,0,36/2);
-            cdisp_wfe = [cdisp_wfe -fliplr(cdisp_wfe)];
-            
-            disp_wfe = linspace(1/16,0,length(wavelength)/2);
-            disp_wfe = [disp_wfe -fliplr(disp_wfe)];
-            if rem(length(wavelength),2) ~= 0
-                disp_wfe = [disp_wfe disp_wfe(end)];
-            end
-            
-            assert(length(disp_wfe) == length(wavelength))
+            %% OLD Aberration Map %%% 
+% % % %             cdisp_wfe = linspace(1/16,0,36/2);
+% % % %             cdisp_wfe = [cdisp_wfe -fliplr(cdisp_wfe)];
+% % % %             
+% % % %             disp_wfe = linspace(1/16,0,length(wavelength)/2);
+% % % %             disp_wfe = [disp_wfe -fliplr(disp_wfe)];
+% % % %             if rem(length(wavelength),2) ~= 0
+% % % %                 disp_wfe = [disp_wfe disp_wfe(end)];
+% % % %             end
+% % % %             
+% % % %             assert(length(disp_wfe) == length(wavelength))
    
             
             % Custom convolution
             
             % Do the first loop iteration outside the loop. Need to
             % calculate dim first
-            ii = 1;
+            ii = 1;            
 %             wfe(7) = disp_wfe(ii);
 %             wfe(8) = cdisp_wfe(ordernum);  
+
+
+            %%% setup linear gradient for e.g. coma
+            
+%             left = 0.25; % left side wfe magnitude (waves)
+%             right = 0; % right side wfe magnitude (waves)
+%             disp_wfe = linspace(left,right,length(wavelength)); % gradient
+%             wfe(4) = disp_wfe(ii); % horizontal coma
+%             
+%             
+            
             
             
             %%% Linear scaling from one psf to another %%% 
@@ -299,11 +368,13 @@ classdef Simulation
             %%% Constant PSF %%% 
             wfeList{ii} = 2*pi*wfe;
             % Added a random flag 
-            PSF(:,:,1) = Simulation.makeAbPsf(wfeList{ii},0.9*[3 3],scale,randflag);
+            PSF = Simulation.makeAbPsf_Andrew(wfeList{ii});
+
+%             PSF(:,:,1) = Simulation.makeAbPsf(wfeList{ii},0.9*[3 3],scale,randflag);
 %             PSF(:,:,1) = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
-            [kernel,~] = Simulation.MakePSF(scale,scaleH(1)*0.9*3,scaleV*0.9*3);
+            % [kernel,~] = Simulation.MakePSF(scale,scaleH(1)*0.9*3,scaleV*0.9*3);
             % broaden the default 3x3 pixel sampling according to the specific sampling needed
-            PSF(:,:,1) = conv2(PSF(:,:,1),kernel,'same'); 
+            % PSF(:,:,1) = conv2(PSF(:,:,1),kernel,'same'); 
             
             
             center = [round(size(PSF,2)/2),round(size(PSF,1)/2)];
@@ -318,16 +389,17 @@ classdef Simulation
             for ii = 2:length(wavelength)
 
 %                 wfeList{ii} = 2*pi*wfe*(0.97/wavelength(ii));
-                wfe(7) = disp_wfe(ii);
-                wfeList{ii} = 2*pi*wfe;
+%                 wfe(4) = disp_wfe(ii);
+%                 wfeList{ii} = 2*pi*wfe;
 
 %                 PSF(:,:,ii) = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
+%                 PSF = Simulation.makeAbPsf_Andrew(wfeList{ii});
 
-                PSF(:,:,ii) = Simulation.makeAbPsf(wfeList{ii},0.9*[3 3],scale,randflag);
+%                 PSF(:,:,ii) = Simulation.makeAbPsf(wfeList{ii},0.9*[3 3],scale,randflag);
                 % PSF(:,:,1) = Simulation.makeAbPsf(wfeList{ii},[horSamp(ii) vertSamp],scale);
-                [kernel,~] = Simulation.MakePSF(scale,scaleH(ii)*0.9*3,scaleV*0.9*3);
+                % [kernel,~] = Simulation.MakePSF(scale,scaleH(ii)*0.9*3,scaleV*0.9*3);
                 % broaden the default 3x3 pixel sampling according to the specific sampling needed
-                PSF(:,:,ii) = conv2(PSF(:,:,ii),kernel,'same');
+                % PSF(:,:,ii) = conv2(PSF(:,:,ii),kernel,'same');
                 
                 
 %                 [PSF,~] = Simulation.MakePSF(scale,horSamp(ii),vertSamp);
@@ -335,7 +407,8 @@ classdef Simulation
                 %                 Conv1 = conv2(spectrum(ii),PSF,'full');
                 
                 
-                rectangle(:,ii:dim-1+ii)=rectangle(:,ii:dim-1+ii)+PSF(:,:,ii).*spectrum(ii);
+%                 rectangle(:,ii:dim-1+ii)=rectangle(:,ii:dim-1+ii)+PSF(:,:,ii).*spectrum(ii);
+                rectangle(:,ii:dim-1+ii)=rectangle(:,ii:dim-1+ii)+PSF.*spectrum(ii);
                 
                 
                 %                 rectangle(:,ii:dim-1+ii)=rectangle(:,ii:dim-1+ii)+Conv1;
