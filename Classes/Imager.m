@@ -226,7 +226,7 @@ classdef Imager < Instrument
                 curveDirectory = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/Curves/Instrument/';
             else
                 
-                curveDirectory = [current_path(1:2) '\Simulator\RefFiles\Curves\Instrument\'];
+                curveDirectory = [current_path '\RefFiles\Curves\Instrument\'];
             end
             
             obj.bandPass = bandPass;

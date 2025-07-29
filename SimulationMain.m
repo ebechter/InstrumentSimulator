@@ -1,5 +1,5 @@
 function SimulationMain(parallelInfo,runInfo, specInfo,fitsname, ...
-    wfe,starInfo,source,polarization,SpecOrImager,conditions, headerinfo,persistentSource)
+    wfe,starInfo,source,polarization,SpecOrImager,conditions, headerinfo)
 
 % Creates all simulation objects, combines throughput with flux,
 % simlulates physical instrument response (PSF or spectrum) and writes data product  
@@ -58,7 +58,7 @@ seeing = conditions{2};
 entWindow = conditions{3};
 aoType = conditions{4};
 scale = runInfo{2};
-persistence = persistentSource.persistence;
+persistence = 0;
 
 %-------------------%
 % Processing Options
@@ -157,24 +157,24 @@ for ii = tracenum
     
     
     %========== Persistent Source Options ===========%
-    
-    if strcmp('etalon', persistentSource.name) == 1 && exist('persistentEtalon','var') == 0
-        % make an etalon
-        persistentEtalon = Etalon(scale);
-        
-    elseif strcmp('star', persistentSource.name) == 1 && exist('persistentStar','var') == 0
-        % make a star
-        
-        persistentStar = Star(persistentSource.spType,persistentSource.vmag,persistentSource.epsilon,...
-            persistentSource.vsini,persistentSource.rv,persistentSource.units);
-        
-    elseif strcmp('flat', persistentSource.name) == 1 && exist('persistentFlat','var') == 0
-        % make a flat spectrum
-        persistentFlat = Flat(scale);
-        
-    elseif strcmp('superk', persistentSource.name) == 1 && exist('persistentSuperk','var') == 0
-        persistentSuperk = SuperK();
-    end
+%     
+%     if strcmp('etalon', persistentSource.name) == 1 && exist('persistentEtalon','var') == 0
+%         % make an etalon
+%         persistentEtalon = Etalon(scale);
+%         
+%     elseif strcmp('star', persistentSource.name) == 1 && exist('persistentStar','var') == 0
+%         % make a star
+%         
+%         persistentStar = Star(persistentSource.spType,persistentSource.vmag,persistentSource.epsilon,...
+%             persistentSource.vsini,persistentSource.rv,persistentSource.units);
+%         
+%     elseif strcmp('flat', persistentSource.name) == 1 && exist('persistentFlat','var') == 0
+%         % make a flat spectrum
+%         persistentFlat = Flat(scale);
+%         
+%     elseif strcmp('superk', persistentSource.name) == 1 && exist('persistentSuperk','var') == 0
+%         persistentSuperk = SuperK();
+%     end
     
 %---------------------%
 % Create atmosphere

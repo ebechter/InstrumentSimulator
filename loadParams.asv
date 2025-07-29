@@ -86,8 +86,7 @@ wfe(16) = 0;    % Secondary spherical abb
 sources{1}.name = 'star'; 
 sources{1}.atmosphere = 0;
 sources{1}.throughput = {'lbt','lbti','fiberCh','fiberLink','spectrograph'};
-sources{1}.AO = 1; 
-sources{1}.tput_flag = 1;
+sources{1}.AO = 1;  
 % source1 = 'flat'; 
 % atmosphere1 = 0;
 % throughput1 = {'calibration','spectrograph'};
@@ -106,8 +105,6 @@ sources{2}.name = 'etalon';
 sources{2}.atmosphere = 0;
 sources{2}.throughput = {'calibration','spectrograph'};
 sources{2}.AO = 0; 
-sources{2}.tput_flag = 1;
-
 
 
 % Source 3  
@@ -116,8 +113,6 @@ sources{3}.name = 'flat';
 sources{3}.atmosphere = 0;
 sources{3}.throughput = {'calibration','spectrograph'};
 sources{3}.AO = 0; 
-sources{3}.tput_flag = 1;
-
 
 headerinfo = {
         'version',version,'version';...

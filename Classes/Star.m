@@ -42,8 +42,17 @@ classdef Star < Spectra
                 allardpath = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Spectral_Catalogs/FAllard/CIFIST6b_trimmed_resampled/';
                
             else
-                starfile = [current_path(1:2) '\Simulator\RefFiles\Star\fullpecautmamajek.xlsx'];
-                allardpath = [current_path(1:2) '\Spectral_Catalogs\FAllard\CIFIST6b_trimmed_resampled\'];
+                starfile = [current_path '\RefFiles\Star\fullpecautmamajek.xlsx'];
+                
+                % Go up one folder
+                [parentPath, ~, ~] = fileparts(current_path);
+
+                % Go up another folder
+                [grandParentPath, ~, ~] = fileparts(parentPath);
+
+                
+                
+                allardpath = [grandParentPath '\Spectral_Catalogs\FAllard\CIFIST6b_trimmed_resampled\'];
             end
             
            

@@ -102,8 +102,8 @@ classdef Spectrograph < Instrument
                 load('/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/polycoeffs2.mat')
             else
                 
-                curveDirectory = [current_path(1:2) '\Simulator\RefFiles\Curves\Spectrograph\'];
-                load([current_path(1:2) '\Simulator\polycoeffs2.mat']);
+                curveDirectory = [current_path '\RefFiles\Curves\Spectrograph\'];
+                load([current_path '\polycoeffs2.mat']);
             end
             
             

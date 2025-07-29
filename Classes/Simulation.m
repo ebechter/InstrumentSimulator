@@ -602,7 +602,7 @@ classdef Simulation
                 
                 strehl_dir = '/afs/crc.nd.edu/group/Exoplanets/ebechter/NewSim/Simulator/RefFiles/AO/';
             else
-                strehl_dir = [current_path(1:2) '\Simulator\RefFiles\AO\'];
+                strehl_dir = [current_path '\RefFiles\AO\'];
             end
             
             
